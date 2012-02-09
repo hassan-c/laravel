@@ -42,7 +42,7 @@ class URL {
 
 		// If the application URL configuration is set, we will just use
 		// that instead of trying to guess the URL from the $_SERVER
-		// array's host and script name variables.
+		// array's host and script variables.
 		if (($url = Config::get('application.url')) !== '')
 		{
 			$base = $url;
