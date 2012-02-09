@@ -53,6 +53,28 @@ class Router {
 	public static $methods = array('GET', 'POST', 'PUT', 'DELETE');
 
 	/**
+	 * Register an array of routes with the router.
+	 *
+	 * <code>
+	 *		// Register an array of routes
+	 *		Router::group(array('GET /' => function() {}));
+	 *
+	 *		// Register a batch route that handles multiple URIs
+	 *		Router:group(array('GET /, GET /home' => function() {}));
+	 * </code>
+	 *
+	 * @param  array  $routes
+	 * @return void
+	 */
+	public static function group($routes)
+	{
+		foreach ($routes as $route => $action)
+		{
+			static::register($route, $action);
+		}
+	}
+
+	/**
 	 * Register a HTTPS route with the router.
 	 *
 	 * @param  string|array  $route
@@ -62,6 +84,42 @@ class Router {
 	public static function secure($route, $action)
 	{
 		static::register($route, $action, true);
+	}
+
+	/**
+	 * Register conventional controller handling for a bundle.
+	 *
+	 * @param  string  $bundle
+	 * @return void
+	 */
+	public static function bundle($bundle = DEFAULT_BUNDLE)
+	{
+		if ($bundle !== DEFAULT_BUNDLE)
+		{
+			$root = Bundle::option($bundle, 'handles');
+		}
+
+		// Once we have the root URI of the given bundle, which may be an empty string
+		// in the case of the default bundle. We will first register a route to the
+		// root of the bundle pointing to the home@index method.
+		static::register("* /{$root}", "{$bundle}::home@index");
+
+		// This route sets up the default controller routing convnetion for Laravel.
+		// The first required segment is the controller name, the second segment
+		// is an optional method name, and the remaining segments are passed to
+		// the action as parameters.
+		//
+		// This essentially gives a good baseline convention for routing that
+		// is similar to other frameworks such as Rails and ASP.NET MVC.
+		// The "defaults" array states that the method defaults to
+		// index and the parameters to null.
+		static::register("* /{$root}(:any)/(:any?)/(:any?)/(:any?)", array(
+			
+			'uses'     => "{$bundle}::(:1)@(:2)",
+
+			'defaults' => array('index', null, null),
+		
+		));
 	}
 
 	/**
@@ -82,8 +140,13 @@ class Router {
 	 */
 	public static function register($route, $action, $https = false)
 	{
+		if (is_string($route)) $route = explode(', ', $route);
+
 		foreach ((array) $route as $uri)
 		{
+			// If the URI begins with a splat, we'll call the universal method, which
+			// will register a route for each of the request methods supported by
+			// the router. This is just a notational short-cut.
 			if (starts_with($uri, '*'))
 			{
 				static::universal(substr($uri, 2), $action);
@@ -123,7 +186,14 @@ class Router {
 				$routes[$uri] = (array) $action;
 			}
 
-			$routes[$uri]['https'] = $https;
+			// If the HTTPS option is not set on the action, we will use the
+			// value given to the method. The "secure" method passes in the
+			// HTTPS value in as a parameter short-cut, just so the dev
+			// doesn't always have to add it to an array.
+			if ( ! isset($routes[$uri]['https']))
+			{
+				$routes[$uri]['https'] = $https;
+			}
 
 			$routes[$uri]['handles'] = (array) $route;
 		}
@@ -195,6 +265,8 @@ class Router {
 	 */
 	public static function uses($action, $method = 'GET')
 	{
+		Bundle::routes(Bundle::name($action));
+
 		foreach (static::routes() as $uri => $route)
 		{
 			// To find the route, we'll simply spin through the routes looking
@@ -236,9 +308,9 @@ class Router {
 			return new Route($destination, $action);
 		}
 
-		// If we can't find a literal match, we'll iterate through all of
-		// the registered routes to find a matching route that uses some
-		// regular expressions or wildcards.
+		// If we can't find a literal match we'll iterate through all of
+		// the registered routes to find a matching route that uses
+		// some regular expressions or wildcards.
 		if ( ! is_null($route = static::match($destination)))
 		{
 			return $route;

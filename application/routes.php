@@ -12,38 +12,30 @@
 |
 | Let's respond to a simple GET request to http://example.com/hello:
 |
-|		Router::register('GET /hello', function()
+|		Route::to('GET /hello', function()
 |		{
 |			return 'Hello World!';
 |		});
 |
 | You can even respond to more than one URI:
 |
-|		Router::register('GET /hello, GET /world', function()
+|		Route::to('GET /hello, GET /world', function()
 |		{
 |			return 'Hello World!';
 |		});
 |
 | It's easy to allow URI wildcards using (:num) or (:any):
 |
-|		Router::register('GET /hello/(:any)', function($name)
+|		Route::to('GET /hello/(:any)', function($name)
 |		{
 |			return "Welcome, $name.";
 |		});
 |
 */
 
-Router::register('GET /', function()
-{
-	return View::make('home.index');
-});
+Route::bundle();
 
-Router::register('* /(:any)/(:any?)/(:any?)', array(
-	'uses'     => '(:1)@(:2)',
-	'defaults' => array('index', null),
-));
-
-Router::register('* /(:all)', function()
+Route::to('* /(:all)', function()
 {
 	return Response::error('404');
 });

@@ -129,9 +129,8 @@ class Route {
 	public function call()
 	{
 		// The route is responsible for running the global filters, and any
-		// filters defined on the route itself. Since all incoming requests
-		// come through a route (either defined or ad-hoc), it makes sense
-		// to let the route handle the global filters.
+		// filters defined on the route itself, since all incoming requests
+		// come through a route (either defined or ad-hoc).
 		$response = Filter::run($this->filters('before'), array(), true);
 
 		if (is_null($response))
@@ -139,6 +138,9 @@ class Route {
 			$response = $this->response();
 		}
 
+		// We always return a Response instance from the route calls, so
+		// we'll use the prepare method on the Response class to make
+		// sure we have a valid Response isntance.
 		$response = Response::prepare($response);
 
 		Filter::run($this->filters('after'), array($response));
@@ -157,8 +159,7 @@ class Route {
 	{
 		// If the action is a string, it is simply pointing the route to a
 		// controller action, and we can just call the action and return
-		// its response. This is the most basic form of route, and is
-		// the simplest to handle.
+		// its response. This is the most basic form of route.
 		if ( ! is_null($delegate = $this->delegate()))
 		{
 			return Controller::call($delegate, $this->parameters);
@@ -166,7 +167,7 @@ class Route {
 
 		// If the route does not have a delegate, it should either be a
 		// Closure instance or have a Closure in its action array, so
-		// we will attempt to get the Closure and call it.
+		// we'll attempt call it now.
 		elseif ( ! is_null($handler = $this->handler()))
 		{
 			return call_user_func_array($handler, $this->parameters);
@@ -183,14 +184,18 @@ class Route {
 	 */
 	protected function filters($event)
 	{
-		$filters = array_unique(array($event, Bundle::prefix($this->bundle).$event));
+		$global = Bundle::prefix($this->bundle).$event;
 
-		// Next wee will check to see if there are any filters attached
-		// for the given event. If there are, we'll merge them in with
-		// the global filters for the application event.
+		$filters = array_unique(array($event, $global));
+
+		// Next we will check to see if there are any filters attached to
+		// the route for the given event. If there are, we'll merge them
+		// in with the global filters for the event.
 		if (isset($this->action[$event]))
 		{
-			$filters = array_merge($filters, Filter::parse($this->action[$event]));
+			$assigned = Filter::parse($this->action[$event]);
+
+			$filters = array_merge($filters, $assigned);
 		}
 
 		return array(new Filter_Collection($filters));
@@ -224,22 +229,6 @@ class Route {
 	}
 
 	/**
-	 * Extract the URI string from a route destination.
-	 *
-	 * <code>
-	 *		// Returns "home/index" as the destination's URI
-	 *		$uri = Route::uri('GET /home/index');
-	 * </code>
-	 *
-	 * @param  string  $destination
-	 * @return string
-	 */
-	public static function destination($destination)
-	{
-		return substr($destination, strpos($destination, '/'));
-	}
-
-	/**
 	 * Determine if the route has a given name.
 	 *
 	 * <code>
@@ -269,6 +258,85 @@ class Route {
 		{
 			return preg_match('#'.$pattern.'#', $uri);
 		}));
+	}
+
+	/**
+	 * Register a route with the router.
+	 *
+	 * <code>
+	 *		// Register a route with the router
+	 *		Route::to('GET /', function() {return 'Home!';});
+	 *
+	 *		// Register a route that handles multiple URIs with the router
+	 *		Route::to(array('GET /', 'GET /home'), function() {return 'Home!';});
+	 * </code>
+	 *
+	 * @param  string|array  $route
+	 * @param  mixed         $action
+	 * @param  bool          $https
+	 * @return void
+	 */
+	public static function to($route, $action, $secure = false)
+	{
+		Router::register($route, $action, $secure);
+	}
+
+	/**
+	 * Register a HTTPS route with the router.
+	 *
+	 * @param  string|array  $route
+	 * @param  mixed         $action
+	 * @return void
+	 */
+	public static function secure($route, $action)
+	{
+		static::to($route, $action, true);
+	}
+
+	/**
+	 * Register an array of routes with the router.
+	 *
+	 * <code>
+	 *		// Register an array of routes
+	 *		Route::group(array('GET /' => function() {}));
+	 *
+	 *		// Register a batch route that handles multiple URIs
+	 *		Route:group(array('GET /, GET /home' => function() {}));
+	 * </code>
+	 *
+	 * @param  array  $routes
+	 * @return void
+	 */
+	public static function group($routes)
+	{
+		Router::group($routes);
+	}
+
+	/**
+	 * Register conventional controller handling for a bundle.
+	 *
+	 * @param  string  $bundle
+	 * @return void
+	 */
+	public static function bundle($bundle = DEFAULT_BUNDLE)
+	{
+		Router::bundle($bundle);
+	}
+
+	/**
+	 * Extract the URI string from a route destination.
+	 *
+	 * <code>
+	 *		// Returns "home/index" as the destination's URI
+	 *		$uri = Route::uri('GET /home/index');
+	 * </code>
+	 *
+	 * @param  string  $destination
+	 * @return string
+	 */
+	public static function destination($destination)
+	{
+		return substr($destination, strpos($destination, '/'));
 	}
 
 }
