@@ -2,6 +2,7 @@
 
 use Closure;
 use Laravel\Bundle;
+use Laravel\Request;
 use Laravel\Response;
 
 class Route {
@@ -258,6 +259,16 @@ class Route {
 		{
 			return preg_match('#'.$pattern.'#', $uri);
 		}));
+	}
+
+	/**
+	 * Determine if this route instance is a sub-request route.
+	 *
+	 * @return bool
+	 */
+	public function internal()
+	{
+		return Request::route() !== $this;
 	}
 
 	/**

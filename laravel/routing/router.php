@@ -1,4 +1,9 @@
-<?php namespace Laravel\Routing; use Closure, Laravel\Str, Laravel\Bundle;
+<?php namespace Laravel\Routing;
+
+use Closure;
+use Laravel\Str;
+use Laravel\Bundle;
+use Laravel\Request;
 
 class Router {
 
@@ -94,26 +99,26 @@ class Router {
 	 */
 	public static function bundle($bundle = DEFAULT_BUNDLE)
 	{
+		// First, if we're not registering for the default bundle, we want to grab the
+		// root URI for the bundle. We'll use this to prefix the standard routes with
+		// so the routes will always be up to date with the "handles" clause.
 		if ($bundle !== DEFAULT_BUNDLE)
 		{
-			$root = Bundle::option($bundle, 'handles');
+			$root = rtrim(Bundle::option($bundle, 'handles'), '/');
 		}
 
 		// Once we have the root URI of the given bundle, which may be an empty string
 		// in the case of the default bundle. We will first register a route to the
-		// root of the bundle pointing to the home@index method.
+		// root of the bundle to the home@index method.
 		static::register("* /{$root}", "{$bundle}::home@index");
 
-		// This route sets up the default controller routing convnetion for Laravel.
+		// This route sets up the default controller routing convention for Laravel.
 		// The first required segment is the controller name, the second segment
 		// is an optional method name, and the remaining segments are passed to
-		// the action as parameters.
-		//
-		// This essentially gives a good baseline convention for routing that
-		// is similar to other frameworks such as Rails and ASP.NET MVC.
-		// The "defaults" array states that the method defaults to
-		// index and the parameters to null.
-		static::register("* /{$root}(:any)/(:any?)/(:any?)/(:any?)", array(
+		// the action as parameters - a good base route.
+		$pattern = trim("/{$root}/(:any)/(:any?)/(:any?)/(:any?)", '/');
+
+		static::register("* /{$pattern}", array(
 			
 			'uses'     => "{$bundle}::(:1)@(:2)",
 
@@ -291,29 +296,29 @@ class Router {
 	 */
 	public static function route($method, $uri)
 	{
-		// First we will make sure the bundle that handles the given URI has
-		// been started for the current request. Bundles may handle any URI
-		// beginning with their specified "handles" string.
+		// First we will make sure the bundle that handles the given URI has been
+		// started for the current request. Bundles may handle any URI beginning
+		// with their "handles" string.
 		Bundle::start($bundle = Bundle::handles($uri));
 
-		// All route URIs begin with the request method and have a leading
-		// slash before the URI. We'll put the request method and URI in
-		// that format so we can find matches.
+		// All route URIs begin with the request method and have a leading slash
+		// before the URI. We'll put the request method and URI in that format
+		// so we can find matches easily.
 		$destination = $method.' /'.trim($uri, '/');
 
 		if (array_key_exists($destination, static::$routes))
 		{
 			$action = static::$routes[$destination];
 
-			return new Route($destination, $action);
+			return Request::add(new Route($destination, $action));
 		}
 
-		// If we can't find a literal match we'll iterate through all of
-		// the registered routes to find a matching route that uses
-		// some regular expressions or wildcards.
+		// If we can't find a literal match we'll iterate through all of the
+		// registered routes to find a matching route based on the route's
+		// regular expressions and wildcards.
 		if ( ! is_null($route = static::match($destination)))
 		{
-			return $route;
+			return Request::add($route);
 		}
 	}
 

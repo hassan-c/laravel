@@ -3,6 +3,7 @@
 use Laravel\IoC;
 use Laravel\Str;
 use Laravel\View;
+use Laravel\Event;
 use Laravel\Bundle;
 use Laravel\Request;
 use Laravel\Redirect;
@@ -16,6 +17,13 @@ abstract class Controller {
 	 * @var string
 	 */
 	public $layout;
+
+	/**
+	 * The bundle the controller belongs to.
+	 *
+	 * @var string
+	 */
+	public $bundle;
 
 	/**
 	 * Indicates if the controller uses RESTful routing.

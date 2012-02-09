@@ -5,18 +5,18 @@ use Closure;
 class Request {
 
 	/**
-	 * The route handling the current request.
-	 *
-	 * @var Routing\Route
-	 */
-	public static $route;
-
-	/**
 	 * The request data key that is used to indicate a spoofed request method.
 	 *
 	 * @var string
 	 */
 	const spoofer = '__spoofer';
+
+	/**
+	 * All of the route instances handling the request.
+	 *
+	 * @var array
+	 */
+	public static $routes = array();
 
 	/**
 	 * Get the URI for the current request.
@@ -139,13 +139,38 @@ class Request {
 	}
 
 	/**
-	 * Get the route handling the current request.
+	 * Add a route to the array of active routes for the request.
+	 *
+	 * @param  Route  $route
+	 * @return Route
+	 */
+	public static function add(Routing\Route $route)
+	{
+		static::$routes[] = $route;
+
+		return $route;
+	}
+
+	/**
+	 * Get the main route handling the request.
 	 *
 	 * @return Route
 	 */
 	public static function route()
 	{
-		return static::$route;
+		return reset(static::$routes);
+	}
+
+	/**
+	 * Get the latest route handling the request.
+	 *
+	 * This is only applicable for HMVC style requests.
+	 *
+	 * @return Route
+	 */
+	public static function latest()
+	{
+		return end(static::$routes);
 	}
 
 }
