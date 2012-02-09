@@ -197,7 +197,7 @@ class Bundler extends Task {
 		{
 			// First we'll call the bundle repository to gather the bundle data
 			// array, which contains all of the information needed to install
-			// the bundle into the application.
+			// the bundle into the Laravel application.
 			$response = $this->retrieve($bundle);
 
 			if ($response['status'] == 'not-found')
