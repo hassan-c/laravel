@@ -48,6 +48,8 @@ abstract class Controller {
 	 */
 	public static function call($destination, $parameters = array())
 	{
+		static::references($destination, $parameters);
+
 		list($bundle, $destination) = Bundle::parse($destination);
 
 		// We will always start the bundle, just in case the developer is pointing
@@ -57,38 +59,41 @@ abstract class Controller {
 
 		list($controller, $method) = explode('@', $destination);
 
-		list($method, $parameters) = static::backreference($method, $parameters);
-
 		$controller = static::resolve($bundle, $controller);
 
 		// If the controller could not be resolved, we're out of options and
 		// will return the 404 error response. If we found the controller,
 		// we can execute the requested method on the instance.
-		if (is_null($controller)) return Response::error('404');
+		if (is_null($controller))
+		{
+			return Response::error('404');
+		}
 
 		return $controller->execute($method, $parameters);
 	}
 
 	/**
-	 * Replace all back-references on the given method.
+	 * Replace all back-references on the given destination.
 	 *
-	 * @param  string  $method
+	 * @param  string  $destination
 	 * @param  array   $parameters
 	 * @return array
 	 */
-	protected static function backreference($method, $parameters)
+	protected static function references(&$destination, &$parameters)
 	{
 		// Controller delegates may use back-references to the action parameters,
 		// which allows the developer to setup more flexible routes to various
 		// controllers with much less code than usual.
 		foreach ($parameters as $key => $value)
 		{
-			$method = str_replace('(:'.($key + 1).')', $value, $method, $count);
+			$search = '(:'.($key + 1).')';
+
+			$destination = str_replace($search, $value, $destination, $count);
 
 			if ($count > 0) unset($parameters[$key]);
 		}
 
-		return array(str_replace('(:1)', 'index', $method), $parameters);
+		return array(str_replace('(:1)', 'index', $destination), $parameters);
 	}
 
 	/**

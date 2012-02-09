@@ -405,7 +405,21 @@ class Bundle {
 	 */
 	public static function get($bundle)
 	{
-		return (object) array_get(static::$bundles, $bundle);
+		return array_get(static::$bundles, $bundle);
+	}
+
+	/**
+	 * Get an option for a given bundle.
+	 *
+	 * @param  string  $bundle
+	 * @param  string  $option
+	 * @return mixed
+	 */
+	public static function option($bundle, $option)
+	{
+		$bundle = static::get($bundle);
+
+		if ( ! is_null($bundle)) return array_get($bundle, $option);
 	}
 
 	/**

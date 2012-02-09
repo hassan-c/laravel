@@ -33,9 +33,19 @@
 |
 */
 
-Router::register(array('GET /', 'GET /home'), function()
+Router::register('GET /', function()
 {
 	return View::make('home.index');
+});
+
+Router::register('* /(:any)/(:any?)/(:any?)', array(
+	'uses'     => '(:1)@(:2)',
+	'defaults' => array('index', null),
+));
+
+Router::register('* /(:all)', function()
+{
+	return Response::error('404');
 });
 
 /*

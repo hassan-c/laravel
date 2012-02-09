@@ -1,4 +1,4 @@
-<?php namespace Laravel;
+<?php namespace Laravel; use Laravel\Routing\Router, Laravel\Routing\Route;
 
 class URL {
 
@@ -8,6 +8,16 @@ class URL {
 	 * @var string
 	 */
 	public static $base;
+
+	/**
+	 * Get the full URI including the query string.
+	 *
+	 * @return string
+	 */
+	public static function full()
+	{
+		return static::to(URI::full());
+	}
 
 	/**
 	 * Get the full URL for the current request.
@@ -109,14 +119,52 @@ class URL {
 	 *
 	 * @param  string  $action
 	 * @param  array   $parameters
-	 * @param  bool    $https
+	 * @param  string  $method
 	 * @return string
 	 */
-	public static function to_action($action, $parameters = array(), $https = false)
+	public static function to_action($action, $parameters = array(), $method = 'GET')
 	{
-		$action = str_replace(array('.', '@'), '/', $action);
+		// If we found a route that is assigned to the controller and method,
+		// we'll extract the URI and determine if it is a secure route by
+		// examining the action array for the "https" value.
+		//
+		// This allows us to use true reverse routing to controllers, since
+		// URIs may be setup to handle the action that do not follow the
+		// typical controller URI convention.
+		if ( ! is_null($route = Router::uses($action, $method)))
+		{
+			list($destination, $action) = array(key($route), current($route));
 
-		return static::to($action.'/'.implode('/', $parameters), $https);
+			$https = array_get($action, 'https', false);
+
+			$uri = Route::destination($destination);
+		}
+		// IF no route was found that handled the given action, we'll just
+		// generate the URL using the typical controller routing setup
+		// for URIs and turn SSL to false.
+		else
+		{
+			$bundle = Bundle::get(Bundle::name($action));
+
+			// If a bundle exists for the action, we will attempt to use
+			// it's "handles" clause as the root of the generated URL,
+			// as the bundle can only handle those URIs.
+			if ( ! is_null($bundle))
+			{
+				$root = $bundle['handles'] ?: '';
+			}
+
+			$https = false;
+
+			// We'll replace both dots and @ signs in the URI since both
+			// are used to specify the controller and action, and by
+			// default are just translated to slashes.
+			$uri = $root.str_replace(array('.', '@'), '/', $action);
+		}
+
+		$uri = str_finish($uri, '/');
+
+		return static::to($uri.implode('/', $parameters), $https);
 	}
 
 	/**
@@ -126,9 +174,9 @@ class URL {
 	 * @param  array   $parameters
 	 * @return string
 	 */
-	public static function to_secure_action($action, $parameters = array())
+	public static function to_post_action($action, $parameters = array())
 	{
-		return static::to_action($action, $parameters, true);
+		return static::to_action($action, $parameters, 'POST');
 	}
 
 	/**
@@ -171,24 +219,20 @@ class URL {
 	 * @param  bool    $https
 	 * @return string
 	 */
-	public static function to_route($name, $parameters = array(), $https = false)
+	public static function to_route($name, $parameters = array())
 	{
 		if (is_null($route = Routing\Router::find($name)))
 		{
 			throw new \Exception("Error creating URL for undefined route [$name].");
 		}
 
-		$uris = explode(', ', key($route));
+		$uri = Route::destination(key($route));
 
-		// Routes can handle more than one URI, but we will just take the first URI
-		// and use it for the URL. Since all of the URLs should point to the same
-		// route, it doesn't make a difference.
-		$uri = substr($uris[0], strpos($uris[0], '/'));
+		$https = array_get(current($route), 'https', false);
 
 		// Spin through each route parameter and replace the route wildcard segment
 		// with the corresponding parameter passed to the method. Afterwards, we'll
-		// replace all of the remaining optional URI segments with spaces since
-		// they may not have been specified in the array of parameters.
+		// replace all of the remaining optional URI segments.
 		foreach ((array) $parameters as $parameter)
 		{
 			$uri = preg_replace('/\(.+?\)/', $parameter, $uri, 1);
@@ -196,22 +240,10 @@ class URL {
 
 		// If there are any remaining optional place-holders, we'll just replace
 		// them with empty strings since not every optional parameter has to be
-		// in the array of parameters that were passed into the method.
+		// in the array of parameters that were passed.
 		$uri = str_replace(array('/(:any?)', '/(:num?)'), '', $uri);
 
 		return static::to($uri, $https);
-	}
-
-	/**
-	 * Generate a HTTPS URL from a route name.
-	 *
-	 * @param  string  $name
-	 * @param  array   $parameters
-	 * @return string
-	 */
-	public static function to_secure_route($name, $parameters = array())
-	{
-		return static::to_route($name, $parameters, true);
 	}
 
 }

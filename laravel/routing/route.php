@@ -56,17 +56,17 @@ class Route {
 
 		// Extract each URI from the route key. Since the route key has the request
 		// method, we will extract that from the string. If the URI points to the
-		// root of the application, a single forward slash will be returned.
+		// root of the application, a single forward slash is returned.
 		$uris = array_get($action, 'handles', array($key));
 
 		$this->uris = array_map(array($this, 'extract'), $uris);
 
 		// Determine the bundle in which the route was registered. We will know
-		// the bundle by feeding the URI into the bundle::handles method, which
-		// will return the bundle assigned to that URI.
+		// the bundle by using the bundle::handles method, which will return
+		// the bundle assigned to that URI.
 		$this->bundle = Bundle::handles($this->uris[0]);
 
-		$this->parameters = array_map('urldecode', $parameters);
+		$this->parameters($key, $action, $parameters);
 	}
 
 	/**
@@ -82,6 +82,43 @@ class Route {
 		$uri = substr($segment, strpos($segment, ' ') + 1);
 
 		return ($uri !== '/') ? trim($uri, '/') : $uri;
+	}
+
+	/**
+	 * Set the parameters array to the correct value.
+	 *
+	 * @param  string  $key
+	 * @param  array   $action
+	 * @param  array   $parameters
+	 * @return void
+	 */
+	protected function parameters($key, $action, $parameters)
+	{
+		$wildcards = 0;
+
+		// We need to determine how many of the default paramters should be
+		// merged into the parameter array. First, we'll count the number
+		// of wildcards in the route URI.
+		foreach (array_keys(Router::patterns()) as $wildcard)
+		{
+			$wildcards += substr_count($key, $wildcard);
+		}
+
+		$needed = $wildcards - count($parameters);
+
+		// If there are less parameters than wildcards, we'll figure
+		// out how many parameters we need to inject from the array
+		// of defaults and merge them in.
+		if ($needed > 0)
+		{
+			$slice = count($action['defaults']) - $needed;
+
+			$defaults = array_slice($action['defaults'], $slice);
+
+			$parameters = array_merge($parameters, $defaults);
+		}
+
+		$this->parameters = $parameters;
 	}
 
 	/**
@@ -184,6 +221,22 @@ class Route {
 		{
 			return $value instanceof Closure;
 		});
+	}
+
+	/**
+	 * Extract the URI string from a route destination.
+	 *
+	 * <code>
+	 *		// Returns "home/index" as the destination's URI
+	 *		$uri = Route::uri('GET /home/index');
+	 * </code>
+	 *
+	 * @param  string  $destination
+	 * @return string
+	 */
+	public static function destination($destination)
+	{
+		return substr($destination, strpos($destination, '/'));
 	}
 
 	/**

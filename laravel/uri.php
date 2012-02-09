@@ -21,7 +21,20 @@ class URI {
 	 *
 	 * @var array
 	 */
-	protected static $attempt = array('PATH_INFO', 'REQUEST_URI', 'PHP_SELF', 'REDIRECT_URL');
+	protected static $attempt = array(
+		'PATH_INFO', 'REQUEST_URI',
+		'PHP_SELF', 'REDIRECT_URL'
+	);
+
+	/**
+	 * Get the full URI including the query string.
+	 *
+	 * @return string
+	 */
+	public static function full()
+	{
+		return static::current().static::query();
+	}
 
 	/**
 	 * Get the URI for the current request.
@@ -39,7 +52,7 @@ class URI {
 
 		// If you ever encounter this error, please inform the nerdy Laravel
 		// dev team with information about your server. We want to support
-		// Laravel an as many server environments as possible!
+		// Laravel an as many servers as we possibly can!
 		if (is_null(static::$uri))
 		{
 			throw new \Exception("Could not detect request URI.");
@@ -90,7 +103,7 @@ class URI {
 
 		// Next we'll remove the index file from the URI if it is there
 		// and then finally trim down the URI. If the URI is left with
-		// nothing but spaces, we use a single slash for root.
+		// nothing but spaces, we use a single slash.
 		if ($index !== '/')
 		{
 			$uri = static::remove($uri, $index);
@@ -199,6 +212,16 @@ class URI {
 	protected static function remove($uri, $value)
 	{
 		return (strpos($uri, $value) === 0) ? substr($uri, strlen($value)) : $uri;
+	}
+
+	/**
+	 * Get the query string for the current request.
+	 *
+	 * @return string
+	 */
+	protected static function query()
+	{
+		return (count((array) $_GET) > 0) ? '?'.http_build_query($_GET) : '';
 	}
 
 }

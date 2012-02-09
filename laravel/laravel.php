@@ -162,16 +162,6 @@ if (count(URI::$segments) > 15)
  */
 Request::$route = Routing\Router::route(Request::method(), $uri);
 
-if (is_null(Request::$route))
-{
-	Request::$route = new Routing\Route('GET /404', array(function()
-	{
-		return Response::error('404');
-	}));
-
-	$response = Response::error('404');
-}
-
 $response = Request::$route->call();
 
 /**
