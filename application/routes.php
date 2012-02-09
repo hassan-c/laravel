@@ -55,6 +55,11 @@ Route::to('* /', function()
 	return View::make('home.index');
 });
 
+Route::to('* /(:all)', function()
+{
+	return Response::error('404');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Route Filters
