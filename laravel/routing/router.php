@@ -36,6 +36,13 @@ class Router {
 	public static $uses = array();
 
 	/**
+	 * The number of URI segments allowed as method arguments.
+	 *
+	 * @var int
+	 */
+	public static $segments = 6;
+
+	/**
 	 * The wildcard patterns supported by the router.
 	 *
 	 * @var array
@@ -88,42 +95,41 @@ class Router {
 		{
 			list($bundle, $controller) = Bundle::parse($controller);
 
-			// First we'll replace any dots with slashes, as this will cover the routing
-			// of any nested controllers. Dots provide a nice, clean syntax instead of
-			// using the directory slashes in the controller name.
+			// First we need to replace the dots with slashes in thte controller name
+			// so that it is in directory format. The dots allow the developer to use
+			// a clean syntax when specifying the controller.
 			$path = str_replace('.', '/', $controller);
 
 			// We also need to grab the root URI for the bundle. The "handles" option
-			// on the bundle specifies which URIs the bundle can respond to, and we
-			// need to prefix the route with that value.
-			$root = trim(Bundle::option($bundle, 'handles'), '/');
+			// on the bundle specifies which URIs the bundle responds to, and we need
+			// to prefix the route with that value.
+			if ($bundle !== DEFAULT_BUNDLE)
+			{
+				$root = Bundle::option($bundle, 'handles');
+			}
 
-			// Once we have the path and root URI, we can generate a basic route for
-			// the controller that should handle typical, CodeIgniter style routing
-			// where the first parameter is the controller, second is the method,
-			// and the remaining are passed as arguments.
-			static::register(static::basic($root, $path), array(
+			// The number of method arguments allowed for a controller is set by the
+			// "segments" constant on this class, which allows for the developers to
+			// increase or decrease the limit on total number of method arguments
+			// that can be passed to a routable controller action.
+			$segments = static::$segments + 1;
+
+			$wildcards = implode('/', array_fill(0, $segments, '(:any?)'));
+
+			$pattern = "* /{$root}{$path}/{$wildcards}";
+
+			// Once we have the path and root URI we can generate a basic route for
+			// the controller that should handle a typical, conventional controller
+			// routing setup of controller/method/segment/segment that is used in
+			// other popular MVC frameworks like CodeIgniter.
+			static::register($pattern, array(
 				
 				'uses'     => "{$bundle}::{$controller}@(:1)",
-				
-				'defaults' => array('index', null, null, null),
+
+				'defaults' => array_pad(array('index'), $segments, null),
 			
 			));
 		}
-	}
-
-	/**
-	 * Get the route pattern for a basic, conventional controller route.
-	 *
-	 * @param  string  $root
-	 * @param  string  $path
-	 * @return string
-	 */
-	protected static function basic($root, $path)
-	{
-		$wildcards = implode('/', array_fill(0, 4, '(:any?)'));
-
-		return "* /{$root}{$path}/{$wildcards}";
 	}
 
 	/**
@@ -313,7 +319,7 @@ class Router {
 		// so we can find matches easily.
 		$destination = $method.' /'.trim($uri, '/');
 
-		// Of course literal route matches are the quickest to find, so we'll
+		// Of course literal route matches are the quickest to find, so we will
 		// check for those first. If the destination key exists in teh routes
 		// array we can just return that route now.
 		if (array_key_exists($destination, static::$routes))

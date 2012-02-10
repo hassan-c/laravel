@@ -38,10 +38,7 @@ Route::to('GET /', function()
 	return View::make('home.index');
 });
 
-Route::to('* /(:all)', function()
-{
-	return Event::first('404');
-});
+Route::controller('home');
 
 /*
 |--------------------------------------------------------------------------

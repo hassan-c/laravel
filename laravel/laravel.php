@@ -132,6 +132,16 @@ Input::$input = $input;
 Bundle::start(DEFAULT_BUNDLE);
 
 /**
+ * Register the "catch-all" route that handles 404 responses for
+ * routes that can not be matched to any other route within the
+ * application. We'll just raise the 404 event.
+ */
+Routing\Router::register('* /(:all)', function()
+{
+	return Event::first('404');
+});
+
+/**
  * Start all of the bundles that are specified in the configuration
  * array of auto-loaded bundles. This lets the developer have an
  * easy way to load bundles for every request.
