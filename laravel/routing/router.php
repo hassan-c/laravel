@@ -40,7 +40,7 @@ class Router {
 	 *
 	 * @var int
 	 */
-	public static $segments = 7;
+	public static $segments = 5;
 
 	/**
 	 * The wildcard patterns supported by the router.
@@ -81,6 +81,20 @@ class Router {
 	public static function secure($route, $action)
 	{
 		static::register($route, $action, true);
+	}
+
+	/**
+	 * Register an array of routes with the router.
+	 *
+	 * @param  array  $routes
+	 * @return void
+	 */
+	public static function group($routes)
+	{
+		foreach ($routes as $route => $action)
+		{
+			static::register($route, $action);
+		}
 	}
 
 	/**
@@ -164,9 +178,10 @@ class Router {
 	 * Register a controller with the router.
 	 *
 	 * @param  string|array  $controller
+	 * @param  bool          $secure
 	 * @return void
 	 */
-	public static function controller($controllers)
+	public static function controller($controllers, $secure = false)
 	{
 		foreach ((array) $controllers as $controller)
 		{
@@ -187,8 +202,7 @@ class Router {
 
 			// The number of method arguments allowed for a controller is set by the
 			// "segments" constant on this class, which allows for the developers to
-			// increase or decrease the limit on total number of method arguments
-			// that can be passed to a routable controller action.
+			// increase or decrease the limit on method arguments.
 			$wildcards = static::repeat('(:any?)', static::$segments);
 
 			$pattern = "* /{$root}{$path}/{$wildcards}";
@@ -201,9 +215,21 @@ class Router {
 				'uses'     => "{$bundle}::{$controller}@(:1)",
 
 				'defaults' => array_pad(array('index'), static::$segments, null),
-			
+
+				'https'    => $secure,
 			));
 		}
+	}
+
+	/**
+	 * Register a secure controller with the router.
+	 *
+	 * @param  string|array  $controller
+	 * @return void
+	 */
+	public static function secure_controller($controllers)
+	{
+		return static::controller($controllers, true);
 	}
 
 	/**
@@ -242,7 +268,7 @@ class Router {
 
 		// If no route names have been found at all, we will assume no reverse
 		// routing has been done, and we will load the routes file for all of
-		// the bundles that are installed.
+		// the bundles that are installed for the application.
 		if (count(static::$names) == 0)
 		{
 			foreach (Bundle::names() as $bundle)

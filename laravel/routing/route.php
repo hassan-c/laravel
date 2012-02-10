@@ -60,7 +60,10 @@ class Route {
 		// root of the application, a single forward slash is returned.
 		$uris = array_get($action, 'handles', array($key));
 
-		$this->uris = array_map(array($this, 'destination'), $uris);
+		foreach ($uris as $uri)
+		{
+			$this->uris[] = static::destination($uri);
+		}
 
 		// Determine the bundle in which the route was registered. We will know
 		// the bundle by using the bundle::handles method, which will return
@@ -143,18 +146,22 @@ class Route {
 	 */
 	public function response()
 	{
-		// If the action is a string, it is simply pointing the route to a
-		// controller action, and we can just call the action and return
-		// its response. This is the most basic form of route.
-		if ( ! is_null($delegate = $this->delegate()))
+		// If the action is a string, it is pointing the route to a controller
+		// action, and we can just call the action and return its response.
+		// We'll just pass the action off to the Controller class.
+		$delegate = $this->delegate();
+
+		if ( ! is_null($delegate))
 		{
 			return Controller::call($delegate, $this->parameters);
 		}
 
-		// If the route does not have a delegate, it should either be a
-		// Closure instance or have a Closure in its action array, so
-		// we'll attempt call it now.
-		elseif ( ! is_null($handler = $this->handler()))
+		// If the route does not have a delegate, then it must be a Closure
+		// instance or have a Closure in its action array, so we will try
+		// to locate the Closure and call it directly.
+		$handler = $this->handler();
+
+		if ( ! is_null($handler))
 		{
 			return call_user_func_array($handler, $this->parameters);
 		}

@@ -38,8 +38,6 @@ Route::to('GET /', function()
 	return View::make('home.index');
 });
 
-Route::controller('home');
-
 /*
 |--------------------------------------------------------------------------
 | Route Filters
