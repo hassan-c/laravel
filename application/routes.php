@@ -33,9 +33,14 @@
 |
 */
 
-Route::to('* /(:any?)/(:any?)/(:any?)', array(
+Route::to('GET /', function()
+{
+	return View::make('home.index');
+});
+
+Route::to('* /(:any)/(:any?)/(:any?)', array(
 	'uses'     => '(:1)@(:2)',
-	'defaults' => array('home', 'index', null),
+	'defaults' => array('index', null),
 ));
 
 Route::to('* /(:all)', function()

@@ -363,15 +363,6 @@ class Router {
 		if ($count > 0)
 		{
 			$key .= str_repeat(')?', $count);
-
-			// If the key is missing the first forward slash, we will 
-			// add it back on as the first optional segment removed
-			// it from the string.
-			if ( ! str_contains($key, ' /'))
-			{
-				$key = str_replace(' ', ' /', $key);
-				die($key);
-			}
 		}
 
 		return strtr($key, static::$patterns);

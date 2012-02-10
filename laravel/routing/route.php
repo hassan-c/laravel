@@ -67,7 +67,9 @@ class Route {
 		// the bundle assigned to that URI.
 		$this->bundle = Bundle::handles($this->uris[0]);
 
-		$this->parameters($key, $action, $parameters);
+		$defaults = array_get($action, 'defaults', array());
+
+		$this->parameters = array_merge($parameters, $defaults);
 
 		// Once we have set the parameters and URIs, we'll transpose the route
 		// parameters onto the URIs so that the routes response naturally to
@@ -76,43 +78,6 @@ class Route {
 		{
 			$uri = $this->transpose($uri, $this->parameters);
 		}
-	}
-
-	/**
-	 * Set the parameters array to the correct value.
-	 *
-	 * @param  string  $key
-	 * @param  array   $action
-	 * @param  array   $parameters
-	 * @return void
-	 */
-	protected function parameters($key, $action, $parameters)
-	{
-		$wildcards = 0;
-
-		// We need to determine how many of the default paramters should be
-		// merged into the parameter array. First, we'll count the number
-		// of wildcards in the route URI.
-		foreach (array_keys(Router::patterns()) as $wildcard)
-		{
-			$wildcards += substr_count($key, $wildcard);
-		}
-
-		$needed = $wildcards - count($parameters);
-
-		// If there are less parameters than wildcards, we'll figure
-		// out how many parameters we need to inject from the array
-		// of defaults and merge them in.
-		if ($needed > 0)
-		{
-			$slice = count($action['defaults']) - $needed;
-
-			$defaults = array_slice($action['defaults'], $slice);
-
-			$parameters = array_merge($parameters, $defaults);
-		}
-
-		$this->parameters = $parameters;
 	}
 
 	/**
