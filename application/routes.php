@@ -12,28 +12,28 @@
 |
 | Let's respond to a simple GET request to http://example.com/hello:
 |
-|		Route::to('GET /hello', function()
+|		Route::get('hello', function()
 |		{
 |			return 'Hello World!';
 |		});
 |
 | You can even respond to more than one URI:
 |
-|		Route::to('GET /hello, GET /world', function()
+|		Route::get('hello, world', function()
 |		{
 |			return 'Hello World!';
 |		});
 |
 | It's easy to allow URI wildcards using (:num) or (:any):
 |
-|		Route::to('GET /hello/(:any)', function($name)
+|		Route::get('hello/(:any)', function($name)
 |		{
 |			return "Welcome, $name.";
 |		});
 |
 */
 
-Route::get('/', function()
+Route::get('/, home', function()
 {
 	return View::make('home.index');
 });
