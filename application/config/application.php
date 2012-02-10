@@ -122,7 +122,7 @@ return array(
 	*/
 
 	'bundle' => array(
-		'cache' => 0,
+		'cache' => 1440,
 		'auto'  => array(),
 	),
 
