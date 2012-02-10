@@ -32,15 +32,11 @@
 |		});
 |
 */
-/*
-Route::to('GET /', function()
+
+Route::get('/', function()
 {
 	return View::make('home.index');
 });
-*/
-Router::controller('home');
-
-Router::register('GET', '/', function() { return 'Foo'; });
 
 /*
 |--------------------------------------------------------------------------
