@@ -38,11 +38,9 @@ Route::to('GET /', function()
 	return View::make('home.index');
 });
 */
+Router::controller('home');
 
-Route::to('GET /', function()
-{
-	return View::make('home.index');
-});
+Router::register('GET', '/', function() { return 'Foo'; });
 
 /*
 |--------------------------------------------------------------------------

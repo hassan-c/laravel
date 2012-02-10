@@ -8,11 +8,18 @@ use Laravel\Response;
 class Route {
 
 	/**
-	 * The route key, including request method and URI.
+	 * The URI the route response to.
 	 *
 	 * @var string
 	 */
-	public $key;
+	public $uri;
+
+	/**
+	 * The request method the route responds to.
+	 *
+	 * @var string
+	 */
+	public $method;
 
 	/**
 	 * The bundle in which the route was registered.
@@ -38,47 +45,49 @@ class Route {
 	/**
 	 * Create a new Route instance.
 	 *
-	 * @param  string   $key
+	 * @param  string   $method
+	 * @param  string   $uri
 	 * @param  array    $action
 	 * @param  array    $parameters
 	 * @return void
 	 */
-	public function __construct($key, $action, $parameters = array())
+	public function __construct($method, $uri, $action, $parameters = array())
 	{
-		$this->key = $key;
+		$this->uri = $uri;
+		$this->method = $method;
 		$this->action = $action;
 
 		// Determine the bundle in which the route was registered. We will know
 		// the bundle by using the bundle::handles method, which will return
 		// the bundle assigned to that URI.
-		$this->bundle = Bundle::handles(static::destination($key));
+		$this->bundle = Bundle::handles($uri);
 
-		// We need to set the parameters passed on the number parameters and
-		// optional parameters compared to the parameters actually defined
-		// within the route string.
-		$this->parameters($key, $action, $parameters);
+		// We'll need to set the parameters passed on the number parameters and
+		// optional parameters compared to the parameters actually defined in
+		// the URI string for the route.
+		$this->parameters($uri, $action, $parameters);
 	}
 
 	/**
 	 * Set the parameters array to the correct value.
 	 *
-	 * @param  string  $key
+	 * @param  string  $uri
 	 * @param  array   $action
 	 * @param  array   $parameters
 	 * @return void
 	 */
-	protected function parameters($key, $action, $parameters)
+	protected function parameters($uri, $action, $parameters)
 	{
 		$wildcards = 0;
 
 		$defaults = (array) array_get($action, 'defaults');
 
 		// We need to determine how many of the default paramters should be merged
-		// into the parameter array. First, we'll count the number of wildcards
+		// into the parameter array. First, we will count the number of wildcards
 		// in the route URI and then merge the defaults.
 		foreach (array_keys(Router::patterns()) as $wildcard)
 		{
-			$wildcards += substr_count($key, $wildcard);
+			$wildcards += substr_count($uri, $wildcard);
 		}
 
 		$needed = $wildcards - count($parameters);
@@ -222,36 +231,64 @@ class Route {
 	}
 
 	/**
-	 * Register a route with the router.
-	 *
-	 * <code>
-	 *		// Register a route with the router
-	 *		Route::to('GET /', function() {return 'Home!';});
-	 *
-	 *		// Register a route that handles multiple URIs with the router
-	 *		Route::to(array('GET /', 'GET /home'), function() {return 'Home!';});
-	 * </code>
+	 * Register a GET route with the router.
 	 *
 	 * @param  string|array  $route
 	 * @param  mixed         $action
-	 * @param  bool          $https
 	 * @return void
 	 */
-	public static function to($route, $action, $secure = false)
+	public static function get($route, $action)
 	{
-		Router::register($route, $action, $secure);
+		Router::register('GET', $route, $action);
+	}
+
+	/**
+	 * Register a POST route with the router.
+	 *
+	 * @param  string|array  $route
+	 * @param  mixed         $action
+	 * @return void
+	 */
+	public static function post($route, $action)
+	{
+		Router::register('POST', $route, $action);
+	}
+
+	/**
+	 * Register a PUT route with the router.
+	 *
+	 * @param  string|array  $route
+	 * @param  mixed         $action
+	 * @return void
+	 */
+	public static function put($route, $action)
+	{
+		Router::register('PUT', $route, $action);
+	}
+
+	/**
+	 * Register a DELETE route with the router.
+	 *
+	 * @param  string|array  $route
+	 * @param  mixed         $action
+	 * @return void
+	 */
+	public static function delete($route, $action)
+	{
+		Router::register('DELETE', $route, $action);
 	}
 
 	/**
 	 * Register a HTTPS route with the router.
 	 *
+	 * @param  string        $method
 	 * @param  string|array  $route
 	 * @param  mixed         $action
 	 * @return void
 	 */
-	public static function secure($route, $action)
+	public static function secure($method, $route, $action)
 	{
-		static::to($route, $action, true);
+		Router::secure($method, $route, $action);
 	}
 
 	/**
@@ -263,45 +300,6 @@ class Route {
 	public static function controller($controller)
 	{
 		Router::controller($controller);
-	}
-
-	/**
-	 * Register an array of routes with the router.
-	 *
-	 * @param  array  $routes
-	 * @return void
-	 */
-	public static function batch($routes)
-	{
-		Router::batch($routes);
-	}
-
-	/**
-	 * Register a group of routes with the same attributes.
-	 *
-	 * @param  array  $attributes
-	 * @param  array  $routes
-	 * @return void
-	 */
-	public static function group($attributes, $routes)
-	{
-		Router::group($attributes, $routes);
-	}
-
-	/**
-	 * Extract the URI string from a route destination.
-	 *
-	 * <code>
-	 *		// Returns "home/index" as the destination's URI
-	 *		$uri = Route::uri('GET /home/index');
-	 * </code>
-	 *
-	 * @param  string  $destination
-	 * @return string
-	 */
-	public static function destination($destination)
-	{
-		return trim(substr($destination, strpos($destination, '/')), '/') ?: '/';
 	}
 
 }

@@ -172,7 +172,7 @@ class URL {
 	{
 		$https = array_get(current($route), 'https', false);
 
-		return static::transpose(Route::destination(key($route)), $parameters);
+		return static::transpose(key($route), $parameters);
 	}
 
 	/**
@@ -250,14 +250,12 @@ class URL {
 			throw new \Exception("Error creating URL for undefined route [$name].");
 		}
 
-		$uri = Route::destination(key($route));
-
 		// To determine whether the URL should be HTTPS or not, we look for the "https"
 		// value on the route action array. The route has control over whether the URL
 		// should be generated with an HTTPS protocol string or jsut HTTP.
 		$https = array_get(current($route), 'https', false);
 
-		return static::to(static::transpose($uri, $parameters), $https);
+		return static::to(static::transpose(key($route), $parameters), $https);
 	}
 
 	/**

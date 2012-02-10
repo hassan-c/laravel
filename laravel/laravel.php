@@ -136,7 +136,7 @@ Bundle::start(DEFAULT_BUNDLE);
  * routes that can not be matched to any other route within the
  * application. We'll just raise the 404 event.
  */
-Routing\Router::register('* /(:all)', function()
+Routing\Router::register('*', '(:all)', function()
 {
 	return Event::first('404');
 });

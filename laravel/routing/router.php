@@ -74,13 +74,18 @@ class Router {
 	/**
 	 * Register a HTTPS route with the router.
 	 *
+	 * @param  string        $method
 	 * @param  string|array  $route
 	 * @param  mixed         $action
 	 * @return void
 	 */
-	public static function secure($route, $action)
+	public static function secure($method, $route, $action)
 	{
-		static::register($route, $action, true);
+		$action = static::action($action);
+
+		$action['https'] = true;
+
+		static::register($method, $route, $action);
 	}
 
 	/**
@@ -95,56 +100,22 @@ class Router {
 	}
 
 	/**
-	 * Register an array of routes with the router.
-	 *
-	 * @param  array  $routes
-	 * @return void
-	 */
-	public static function batch($routes)
-	{
-		foreach ($routes as $route => $action)
-		{
-			static::register($route, $action);
-		}
-	}
-
-	/**
-	 * Register a group of routes with the same attributes.
-	 *
-	 * @param  array  $attributes
-	 * @param  array  $routes
-	 * @return void
-	 */
-	public static function group($attributes, $routes)
-	{
-		foreach ($routes as $route => $action)
-		{
-			// When registering a group of routes, we'll merge the action with the
-			// attributes that were specified for the route. We let the route's
-			// attributes take precendence to handle exceptions.
-			$action = array_merge($attributes, static::action($action));
-
-			static::register($route, array_merge($attributes, $action));
-		}
-	}
-
-	/**
 	 * Register a route with the router.
 	 *
 	 * <code>
 	 *		// Register a route with the router
-	 *		Router::register('GET /', function() {return 'Home!';});
+	 *		Router::register('GET' ,'/', function() {return 'Home!';});
 	 *
 	 *		// Register a route that handles multiple URIs with the router
-	 *		Router::register(array('GET /', 'GET /home'), function() {return 'Home!';});
+	 *		Router::register(array('GET', '/', 'GET /home'), function() {return 'Home!';});
 	 * </code>
 	 *
+	 * @param  string        $method
 	 * @param  string|array  $route
 	 * @param  mixed         $action
-	 * @param  bool          $https
 	 * @return void
 	 */
-	public static function register($route, $action, $https = false)
+	public static function register($method, $route, $action)
 	{
 		if (is_string($route)) $route = explode(', ', $route);
 
@@ -153,9 +124,12 @@ class Router {
 			// If the URI begins with a splat, we'll call the universal method, which
 			// will register a route for each of the request methods supported by
 			// the router. This is just a notational short-cut.
-			if (starts_with($uri, '*'))
+			if ($method == '*')
 			{
-				static::universal(substr($uri, 2), $action);
+				foreach (static::$methods as $method)
+				{
+					static::register($method, $route, $action);
+				}
 
 				continue;
 			}
@@ -164,7 +138,7 @@ class Router {
 			// array of "fallback" routes. Fallback routes are always processed
 			// last when parsing routes since they are very generic and could
 			// overload bundle routes that are registered.
-			if (str_contains($uri, ' /('))
+			if ($uri[0] == '(')
 			{
 				$routes =& static::$fallback;
 			}
@@ -178,19 +152,19 @@ class Router {
 			// the action method to get a valid action array.
 			if (is_array($action))
 			{
-				$routes[$uri] = $action;
+				$routes[$method][$uri] = $action;
 			}
 			else
 			{
-				$routes[$uri] = static::action($action);
+				$routes[$method][$uri] = static::action($action);
 			}
 			
 			// If the HTTPS option is not set on the action, we will use the
 			// value given to the method. The "secure" method passes in the
 			// HTTPS value in as a parameter short-cut.
-			if ( ! isset($routes[$uri]['https']))
+			if ( ! isset($routes[$method][$uri]['https']))
 			{
-				$routes[$uri]['https'] = $https;
+				$routes[$method][$uri]['https'] = $https;
 			}
 		}
 	}
@@ -210,7 +184,7 @@ class Router {
 		{
 			$action = array('uses' => $action);
 		}
-		// If the action is a CLosure, we will manually put it in an array
+		// If the action is a Closure, we will manually put it in an array
 		// to work around a bug in PHP 5.3.2 which causes Closures cast
 		// as arrays to become null. We'll remove this someday.
 		elseif ($action instanceof Closure)
@@ -247,14 +221,6 @@ class Router {
 				$root = Bundle::option($bundle, 'handles');
 			}
 
-			// If the route is being handled by a bundle, we'll need to add a slash
-			// to the end of the root to put a slash in between the root and the
-			// controller path in the route pattern.
-			if (isset($root))
-			{
-				$root = $root.'/';
-			}
-
 			// If the controller is a "home" controller, we'll need to also build a
 			// index method route for the controller. We'll remove "home" from the
 			// route root and setup a route to point to the index method.
@@ -264,7 +230,9 @@ class Router {
 
 				$uses = "{$identifier}@index";
 
-				static::register('* /'.trim($root.$home, '/'), $uses);
+				$pattern = trim($root.'/'.$home, '/') ?: '/';
+
+				static::register('*', $pattern, $uses);
 			}
 
 			// The number of method arguments allowed for a controller is set by the
@@ -275,9 +243,9 @@ class Router {
 			// Once we have the path and root URI we can generate a basic route for
 			// the controller that should handle a typical, conventional controller
 			// routing setup of controller/method/segment/segment, etc.
-			$pattern = "* /{$root}{$path}/{$wildcards}";
+			$pattern = trim("{$root}/{$path}/{$wildcards}", '/');
 
-			static::register($pattern, array(
+			static::register('*', $pattern, array(
 				
 				'uses'     => "{$identifier}@(:1)",
 
@@ -286,30 +254,6 @@ class Router {
 				'https'    => $secure,
 			));
 		}
-	}
-
-	/**
-	 * Register a route for all HTTP verbs.
-	 *
-	 * @param  string  $route
-	 * @param  mixed   $action
-	 * @return void
-	 */
-	protected static function universal($route, $action)
-	{
-		$count = count(static::$methods);
-
-		$routes = array_fill(0, $count, $route);
-
-		// When registering a universal route, we'll iterate through all of the
-		// verbs supported by the router and prepend each one of the URIs with
-		// one of the request verbs, then we'll register them.
-		for ($i = 0; $i < $count; $i++)
-		{
-			$routes[$i] = static::$methods[$i].' '.$routes[$i];
-		}
-
-		static::register($routes, $action);
 	}
 
 	/**
@@ -338,7 +282,7 @@ class Router {
 		// load them very quickly the next time.
 		foreach (static::routes() as $key => $value)
 		{
-			if (isset($value['name']) and $value['name'] == $name)
+			if (array_get($value, 'name') == $name)
 			{
 				return static::$names[$name] = array($key => $value);
 			}
@@ -364,17 +308,14 @@ class Router {
 
 		Bundle::routes(Bundle::name($action));
 
-		foreach (static::routes() as $uri => $route)
+		// To find the route, we'll simply spin through the routes looking
+		// for a route with a "uses" key matching the action, and if we
+		// find one we cache and return it.
+		foreach (static::routes($method) as $uri => $route)
 		{
-			// To find the route, we'll simply spin through the routes looking
-			// for a route with a "uses" key matching the action, then we'll
-			// check the request method for a match.
-			if (isset($route['uses']) and $route['uses'] == $action)
+			if (array_get($route, 'uses') == $action)
 			{
-				if (starts_with($uri, $method))
-				{
-					return static::$uses[$method.$action] = array($uri => $route);
-				}
+				return static::$uses[$method.$action] = array($uri => $route);
 			}
 		}
 	}
@@ -393,25 +334,20 @@ class Router {
 		// with their "handles" string.
 		Bundle::start($bundle = Bundle::handles($uri));
 
-		// All route URIs begin with the request method and have a leading slash
-		// before the URI. We'll put the request method and URI in that format
-		// so we can find matches easily.
-		$destination = $method.' /'.trim($uri, '/');
-
 		// Of course literal route matches are the quickest to find, so we will
 		// check for those first. If the destination key exists in teh routes
 		// array we can just return that route now.
-		if (array_key_exists($destination, static::$routes))
+		if (array_key_exists($uri, static::$routes[$method]))
 		{
-			$action = static::$routes[$destination];
+			$action = static::$routes[$method][$uri];
 
-			return new Route($destination, $action);
+			return new Route($method, $uri, $action);
 		}
 
 		// If we can't find a literal match we'll iterate through all of the
 		// registered routes to find a matching route based on the route's
 		// regular expressions and wildcards.
-		if ( ! is_null($route = static::match($destination)))
+		if ( ! is_null($route = static::match($method, $uri)))
 		{
 			return $route;
 		}
@@ -420,26 +356,27 @@ class Router {
 	/**
 	 * Iterate through every route to find a matching route.
 	 *
-	 * @param  string  $destination
+	 * @param  string  $method
+	 * @param  string  $uri
 	 * @return Route
 	 */
-	protected static function match($destination)
+	protected static function match($method, $uri)
 	{
-		foreach (static::routes() as $route => $action)
+		foreach (static::routes($method) as $route => $action)
 		{
-			// We only need to check routes with regular expressions since all other
-			// would have been able to be caught by the check for literal matches
-			// we just did before this loop.
-			if (strpos($route, '(') !== false)
+			// We only need to check routes with regular expression since all other
+			// would have been able to be matched by the search for literal matches
+			// we just did before we started searching.
+			if (str_contains($route, '('))
 			{
 				$pattern = '#^'.static::wildcards($route).'$#';
 
-				// If we get a match, we'll return the route and slice off the first
+				// If we get a match we'll return the route and slice off the first
 				// parameter match, as preg_match sets the first array item to the
 				// full-text match of the pattern.
-				if (preg_match($pattern, $destination, $parameters))
+				if (preg_match($pattern, $uri, $parameters))
 				{
-					return new Route($route, $action, array_slice($parameters, 1));
+					return new Route($method, $route, $action, array_slice($parameters, 1));
 				}
 			}
 		}
@@ -471,11 +408,14 @@ class Router {
 	/**
 	 * Get all of the registered routes, with fallbacks at the end.
 	 *
+	 * @param  string  $method
 	 * @return array
 	 */
-	public static function routes()
+	public static function routes($method = null)
 	{
-		return array_merge(static::$routes, static::$fallback);
+		$routes = array_get(static::$routes, $method);
+
+		return array_merge($routes, array_get(static::$fallback, $method));
 	}
 
 	/**
