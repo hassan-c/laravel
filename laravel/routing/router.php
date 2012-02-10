@@ -84,16 +84,47 @@ class Router {
 	}
 
 	/**
+	 * Register a secure controller with the router.
+	 *
+	 * @param  string|array  $controller
+	 * @return void
+	 */
+	public static function secure_controller($controllers)
+	{
+		return static::controller($controllers, true);
+	}
+
+	/**
 	 * Register an array of routes with the router.
 	 *
 	 * @param  array  $routes
 	 * @return void
 	 */
-	public static function group($routes)
+	public static function batch($routes)
 	{
 		foreach ($routes as $route => $action)
 		{
 			static::register($route, $action);
+		}
+	}
+
+	/**
+	 * Register a group of routes with the same attributes.
+	 *
+	 * @param  array  $attributes
+	 * @param  array  $routes
+	 * @return void
+	 */
+	public static function group($attributes, $routes)
+	{
+		foreach ($routes as $route => $action)
+		{
+			// When registering a group of routes, we'll merge the action with the
+			// attributes that were specified for the route. We let the route's
+			// attributes take precendence to handle exceptions.
+			$action = array_merge($attributes, static::action($action));
+
+			static::register($route, array_merge($attributes, $action));
 		}
 	}
 
@@ -142,29 +173,21 @@ class Router {
 				$routes =& static::$routes;
 			}
 
-			// If the action is a string, it is a pointer to a controller, so we
-			// need to add it to the action array as a "uses" clause, which will
-			// indicate to the route to call the controller when the route is
-			// executed by the application.
-			if (is_string($action))
+			// If the action is an array, we can simply add it to the array of
+			// routes keyed by the URI. Otherwise, we will need to call into
+			// the action method to get a valid action array.
+			if (is_array($action))
 			{
-				$routes[$uri]['uses'] = $action;
+				$routes[$uri] = $action;
 			}
-			// If the action is not a string, we can just simply cast it as an
-			// array, then we will add all of the URIs to the action array as
-			// the "handes" clause so we can easily check which URIs are
-			// handled by the route instance.
 			else
 			{
-				if ($action instanceof Closure) $action = array($action);
-
-				$routes[$uri] = (array) $action;
+				$routes[$uri] = static::action($action);
 			}
-
+			
 			// If the HTTPS option is not set on the action, we will use the
 			// value given to the method. The "secure" method passes in the
-			// HTTPS value in as a parameter short-cut, just so the dev
-			// doesn't always have to add it to an array.
+			// HTTPS value in as a parameter short-cut.
 			if ( ! isset($routes[$uri]['https']))
 			{
 				$routes[$uri]['https'] = $https;
@@ -172,6 +195,32 @@ class Router {
 
 			$routes[$uri]['handles'] = (array) $route;
 		}
+	}
+
+	/**
+	 * Convert a route action to a valid action array.
+	 *
+	 * @param  mixed  $action
+	 * @return array
+	 */
+	protected static function action($action)
+	{
+		// If the action is a string, it is a pointer to a controller, so we
+		// need to add it to the action array as a "uses" clause, which will
+		// indicate to the route to call the controller.
+		if (is_string($action))
+		{
+			$action = array('uses' => $action);
+		}
+		// If the action is a CLosure, we will manually put it in an array
+		// to work around a bug in PHP 5.3.2 which causes Closures cast
+		// as arrays to become null. We'll remove this someday.
+		elseif ($action instanceof Closure)
+		{
+			$action = array($action);
+		}
+
+		return (array) $action;
 	}
 
 	/**
@@ -219,17 +268,6 @@ class Router {
 				'https'    => $secure,
 			));
 		}
-	}
-
-	/**
-	 * Register a secure controller with the router.
-	 *
-	 * @param  string|array  $controller
-	 * @return void
-	 */
-	public static function secure_controller($controllers)
-	{
-		return static::controller($controllers, true);
 	}
 
 	/**
