@@ -1,14 +1,5 @@
 <?php
 
-class Something {
-
-	public function get() {}
-	public function post() {}
-	public function delete() {}
-	public function put() {}
-
-}
-
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -53,6 +44,11 @@ Route::to('* /(:any)/(:any?)/(:any?)', array(
 ));
 
 Route::to('* /(:all)', function()
+{
+	return Event::first('404');
+});
+
+Event::listen('404', function()
 {
 	return Response::error('404');
 });

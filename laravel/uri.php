@@ -94,22 +94,45 @@ class URI {
 	 */
 	protected static function format($uri)
 	{
-		// First we want to remove the application's base URL from the URI
-		// if it is in the string. It is possible for some of the server
-		// variables to include the entire document root.
+		// First we want to remove the application's base URL from the URI if it is
+		// in the string. It is possible for some of the parsed server variables to
+		// include the entire document root in the string.
 		$uri = static::remove_base($uri);
 
 		$index = '/'.Config::get('application.index');
 
-		// Next we'll remove the index file from the URI if it is there
-		// and then finally trim down the URI. If the URI is left with
-		// nothing but spaces, we use a single slash.
+		// Next we'll remove the index file from the URI if it is there and then
+		// finally trim down the URI. If the URI is left with spaces, we'll use
+		// a single slash for the root URI.
 		if ($index !== '/')
 		{
 			$uri = static::remove($uri, $index);
 		}
 
 		return trim($uri, '/') ?: '/';
+	}
+
+	/**
+	 * Determine if the current URI matches a given pattern.
+	 *
+	 * @param  string  $pattern
+	 * @return bool
+	 */
+	public static function is($pattern)
+	{
+		// Asterisks are translated into zero-or-more regular expression wildcards
+		// to make it convenient to check if the URI starts with a given pattern
+		// such as "library/*". This is only done when not root.
+		if ($pattern !== '/')
+		{
+			$pattern = str_replace('*', '(.*)', $pattern).'\z';
+		}
+		else
+		{
+			$pattern = '^/$';
+		}
+
+		return preg_match('#'.$pattern.'#', static::current());
 	}
 
 	/**

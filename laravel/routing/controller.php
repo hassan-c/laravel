@@ -62,7 +62,7 @@ abstract class Controller {
 
 		// We will always start the bundle, just in case the developer is pointing
 		// a route to another bundle. This allows us to lazy load the bundle and
-		// improve performance since the bundle is not loaded on every request.
+		// improve speed since the bundle is not loaded on every request.
 		Bundle::start($bundle);
 
 		list($controller, $method) = explode('@', $destination);
@@ -74,7 +74,7 @@ abstract class Controller {
 		// we can execute the requested method on the instance.
 		if (is_null($controller))
 		{
-			return Response::error('404');
+			return Event::first('404');
 		}
 
 		return $controller->execute($method, $parameters);
@@ -101,7 +101,7 @@ abstract class Controller {
 			if ($count > 0) unset($parameters[$key]);
 		}
 
-		return array(str_replace('(:1)', 'index', $destination), $parameters);
+		return array($destination, $parameters);
 	}
 
 	/**
@@ -115,10 +115,12 @@ abstract class Controller {
 	{
 		if ( ! static::load($bundle, $controller)) return;
 
+		$identifier = Bundle::identifier($bundle, $controller);
+
 		// If the controller is registered in the IoC container, we will resolve
 		// it out of the container. Using constructor injection on controllers
-		// via the container allows more flexible and testable applications.
-		$resolver = 'controller: '.Bundle::identifier($bundle, $controller);
+		// via the container allows more flexible applications.
+		$resolver = 'controller: '.$identifier;
 
 		if (IoC::registered($resolver))
 		{

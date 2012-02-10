@@ -68,14 +68,6 @@ class Route {
 		$this->bundle = Bundle::handles($this->uris[0]);
 
 		$this->parameters($key, $action, $parameters);
-
-		// Once we have the parameters and URIs, we will transpose the route
-		// parameters onto the URIs so that the route responds naturally to
-		// handles without the wildcards messing them up.
-		foreach ($this->uris as &$uri)
-		{
-			$uri = $this->transpose($uri, $this->parameters);
-		}
 	}
 
 	/**
@@ -94,7 +86,7 @@ class Route {
 
 		// We need to determine how many of the default paramters should be merged
 		// into the parameter array. First, we'll count the number of wildcards
-		// in the route URI, which will tell us how many parameters we need.
+		// in the route URI to figure out how many defaults we need.
 		foreach (array_keys(Router::patterns()) as $wildcard)
 		{
 			$wildcards += substr_count($key, $wildcard);
@@ -102,9 +94,9 @@ class Route {
 
 		$needed = $wildcards - count($parameters);
 
-		// If there are less parameters than wildcards, we'll figure out how
+		// If there are less parameters than wildcards, we will figure out how
 		// many parameters we need to inject from the array of defaults and
-		// merge them in into the main parameter array.
+		// merge them in into the main parameter array for the route.
 		if ($needed > 0)
 		{
 			$defaults = array_slice($defaults, count($defaults) - $needed);
@@ -262,22 +254,6 @@ class Route {
 	public function is($name)
 	{
 		return is_array($this->action) and array_get($this->action, 'name') === $name;
-	}
-
-	/**
-	 * Determine if the route handles a given URI.
-	 *
-	 * @param  string  $uri
-	 * @return bool
-	 */
-	public function handles($uri)
-	{
-		$pattern = ($uri !== '/') ? str_replace('*', '(.*)', $uri).'\z' : '^/$';
-
-		return ! is_null(array_first($this->uris, function($key, $uri) use ($pattern)
-		{
-			return preg_match('#'.$pattern.'#', $uri);
-		}));
 	}
 
 	/**
