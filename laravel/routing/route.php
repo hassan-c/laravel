@@ -67,17 +67,52 @@ class Route {
 		// the bundle assigned to that URI.
 		$this->bundle = Bundle::handles($this->uris[0]);
 
-		$defaults = array_get($action, 'defaults', array());
+		$this->parameters($key, $action, $parameters);
 
-		$this->parameters = array_merge($parameters, $defaults);
-
-		// Once we have set the parameters and URIs, we'll transpose the route
-		// parameters onto the URIs so that the routes response naturally to
-		// the handles without the wildcards messing them up.
+		// Once we have the parameters and URIs, we will transpose the route
+		// parameters onto the URIs so that the route responds naturally to
+		// handles without the wildcards messing them up.
 		foreach ($this->uris as &$uri)
 		{
 			$uri = $this->transpose($uri, $this->parameters);
 		}
+	}
+
+	/**
+	 * Set the parameters array to the correct value.
+	 *
+	 * @param  string  $key
+	 * @param  array   $action
+	 * @param  array   $parameters
+	 * @return void
+	 */
+	protected function parameters($key, $action, $parameters)
+	{
+		$wildcards = 0;
+
+		$defaults = array_get($action, 'defaults', array());
+
+		// We need to determine how many of the default paramters should be merged
+		// into the parameter array. First, we'll count the number of wildcards
+		// in the route URI, which will tell us how many parameters we need.
+		foreach (array_keys(Router::patterns()) as $wildcard)
+		{
+			$wildcards += substr_count($key, $wildcard);
+		}
+
+		$needed = $wildcards - count($parameters);
+
+		// If there are less parameters than wildcards, we'll figure out how
+		// many parameters we need to inject from the array of defaults and
+		// merge them in into the main parameter array.
+		if ($needed > 0)
+		{
+			$defaults = array_slice($defaults, count($defaults) - $needed);
+
+			$parameters = array_merge($parameters, $defaults);
+		}
+
+		$this->parameters = $parameters;
 	}
 
 	/**
@@ -286,17 +321,6 @@ class Route {
 	public static function secure($route, $action)
 	{
 		static::to($route, $action, true);
-	}
-
-	/**
-	 * Register conventional controller handling for a bundle.
-	 *
-	 * @param  string  $bundle
-	 * @return void
-	 */
-	public static function bundle($bundle = DEFAULT_BUNDLE)
-	{
-		Router::bundle($bundle);
 	}
 
 	/**

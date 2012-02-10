@@ -77,44 +77,6 @@ class Router {
 	}
 
 	/**
-	 * Register conventional controller handling for a bundle.
-	 *
-	 * @param  string  $bundle
-	 * @return void
-	 */
-	public static function bundle($bundle = DEFAULT_BUNDLE)
-	{
-		// First, if we're not registering for the default bundle, we want to grab the
-		// root URI for the bundle. We'll use this to prefix the standard routes with
-		// so the routes will always be up to date with the "handles" clause.
-		if ($bundle !== DEFAULT_BUNDLE)
-		{
-			$root = rtrim(Bundle::option($bundle, 'handles'), '/');
-		} 
-
-		// Once we have the root URI of the given bundle, which may be an empty string
-		// in the case of the default bundle. We will first register a route to the
-		// root of the bundle to the home@index method.
-		static::register("* /{$root}", "{$bundle}::home@index");
-
-		// This route sets up the default controller routing convention for Laravel.
-		// The first required segment is the controller name, the second segment
-		// is an optional method name; the rest are parameters.
-		$pattern = trim("/{$root}/(:any)/(:any?)/(:any?)/(:any?)", '/');
-
-		// By registering this route with a default first parameter of "index",
-		// this should allow calls to any controller and will use familiar
-		// CodeIgniter style conventions for routing the request.
-		static::register("* /{$pattern}", array(
-			
-			'uses' => "{$bundle}::(:1)@(:2)",
-
-			'defaults' => array('index', null, null),
-		
-		));
-	}
-
-	/**
 	 * Register a route with the router.
 	 *
 	 * <code>
