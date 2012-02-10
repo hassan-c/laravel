@@ -1,5 +1,14 @@
 <?php
 
+class Something {
+
+	public function get() {}
+	public function post() {}
+	public function delete() {}
+	public function put() {}
+
+}
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes

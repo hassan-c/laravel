@@ -263,6 +263,9 @@ class Router {
 		// so we can find matches easily.
 		$destination = $method.' /'.trim($uri, '/');
 
+		// Of course literal route matches are the quickest to find, so we'll
+		// check for those first. If the destination key exists in teh routes
+		// array we can just return that route now.
 		if (array_key_exists($destination, static::$routes))
 		{
 			$action = static::$routes[$destination];
