@@ -38,8 +38,6 @@ Route::to('GET /', function()
 	return View::make('home.index');
 });
 
-Router::controller('home');
-
 Route::to('* /(:all)', function()
 {
 	return Event::first('404');

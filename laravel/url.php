@@ -40,9 +40,9 @@ class URL {
 
 		$base = 'http://localhost';
 
-		// If the application URL configuration is set, we will just use
-		// that instead of trying to guess the URL from the $_SERVER
-		// array's host and script variables.
+		// If the application URL configuration is set, we will just use that
+		// instead of trying to guess the URL from the $_SERVER array's host
+		// and script variables as this is more reliable.
 		if (($url = Config::get('application.url')) !== '')
 		{
 			$base = $url;
@@ -53,8 +53,7 @@ class URL {
 
 			// Basically, by removing the basename, we are removing everything after the
 			// and including the front controller from the request URI. Leaving us with
-			// the path in which the framework is installed. From that path, we can
-			// construct the base URL to the application.
+			// the path in which the framework is installed.
 			$script = $_SERVER['SCRIPT_NAME'];
 
 			$path = str_replace(basename($script), '', $script);
@@ -173,7 +172,7 @@ class URL {
 	{
 		$https = array_get(current($route), 'https', false);
 
-		return Route::transpose(Route::destination(key($route)), $parameters);
+		return static::transpose(Route::destination(key($route)), $parameters);
 	}
 
 	/**
@@ -258,7 +257,33 @@ class URL {
 		// URL should be generated with an HTTPS protocol.
 		$https = array_get(current($route), 'https', false);
 
-		return static::to(Route::transpose($uri, $parameters), $https);
+		return static::to(static::transpose($uri, $parameters), $https);
+	}
+
+	/**
+	 * Substitute the parameters in a given URI.
+	 *
+	 * @param  string  $uri
+	 * @param  array   $parameters
+	 * @return string
+	 */
+	public static function transpose($uri, $parameters)
+	{
+		// Spin through each route parameter and replace the route wildcard segment
+		// with the corresponding parameter passed to the method. Afterwards, we'll
+		// replace all of the remaining optional URI segments.
+		foreach ((array) $parameters as $parameter)
+		{
+			if ( ! is_null($parameter))
+			{
+				$uri = preg_replace('/\(.+?\)/', $parameter, $uri, 1);
+			}
+		}
+
+		// If there are any remaining optional place-holders, we'll just replace
+		// them with empty strings since not every optional parameter has to be
+		// in the array of parameters that were passed.
+		return str_replace(array_keys(Router::$optional), '', $uri);		
 	}
 
 }

@@ -108,32 +108,6 @@ class Route {
 	}
 
 	/**
-	 * Substitute the parameters in a given URI.
-	 *
-	 * @param  string  $uri
-	 * @param  array   $parameters
-	 * @return string
-	 */
-	public static function transpose($uri, $parameters)
-	{
-		// Spin through each route parameter and replace the route wildcard segment
-		// with the corresponding parameter passed to the method. Afterwards, we'll
-		// replace all of the remaining optional URI segments.
-		foreach ((array) $parameters as $parameter)
-		{
-			if ( ! is_null($parameter))
-			{
-				$uri = preg_replace('/\(.+?\)/', $parameter, $uri, 1);
-			}
-		}
-
-		// If there are any remaining optional place-holders, we'll just replace
-		// them with empty strings since not every optional parameter has to be
-		// in the array of parameters that were passed.
-		return str_replace(array_keys(Router::$optional), '', $uri);		
-	}
-
-	/**
 	 * Call a given route and return the route's response.
 	 *
 	 * @return Response
@@ -285,6 +259,17 @@ class Route {
 	public static function secure($route, $action)
 	{
 		static::to($route, $action, true);
+	}
+
+	/**
+	 * Register a controller with the router.
+	 *
+	 * @param  string|array  $controller
+	 * @return void
+	 */
+	public static function controller($controller)
+	{
+		Router::controller($controller);
 	}
 
 	/**

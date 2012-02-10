@@ -91,7 +91,7 @@ abstract class Controller {
 	{
 		// Controller delegates may use back-references to the action parameters,
 		// which allows the developer to setup more flexible routes to various
-		// controllers with much less code than usual.
+		// controllers with much less code than would be usual.
 		foreach ($parameters as $key => $value)
 		{
 			$search = '(:'.($key + 1).')';
@@ -113,8 +113,6 @@ abstract class Controller {
 	 */
 	public static function resolve($bundle, $controller)
 	{
-		if ( ! static::load($bundle, $controller)) return;
-
 		$identifier = Bundle::identifier($bundle, $controller);
 
 		// If the controller is registered in the IoC container, we will resolve
@@ -126,6 +124,11 @@ abstract class Controller {
 		{
 			return IoC::resolve($resolver);
 		}
+
+		// If we couldn't resolve the controller out of the IoC container we'll
+		// format the controller name into its proper class name and load it
+		// by convention out of the bundle's controller directory.
+		if ( ! static::load($bundle, $controller)) return;
 
 		$controller = static::format($bundle, $controller);
 
@@ -184,11 +187,12 @@ abstract class Controller {
 	 */
 	public function execute($method, $parameters = array())
 	{
+		$filters = $this->filters('before', $method);
+
 		// Again, as was the case with route closures, if the controller "before"
 		// filters return a response, it will be considered the response to the
-		// request and the controller method will not be used to handle the
-		// request to the application.
-		$response = Filter::run($this->filters('before', $method), array(), true);
+		// request and the controller method will not be used .
+		$response = Filter::run($filters, array(), true);
 
 		if (is_null($response))
 		{
@@ -201,7 +205,7 @@ abstract class Controller {
 
 		// The "after" function on the controller is simply a convenient hook
 		// so the developer can work on the response before it's returned to
-		// the browser. This is useful for setting partials on the layout.
+		// the browser. This is useful for templating, etc.
 		$this->after($response);
 
 		Filter::run($this->filters('after', $method), array($response));

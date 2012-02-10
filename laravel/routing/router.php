@@ -79,7 +79,7 @@ class Router {
 	/**
 	 * Register a controller with the router.
 	 *
-	 * @param  string  $controller
+	 * @param  string|array  $controller
 	 * @return void
 	 */
 	public static function controller($controllers)
