@@ -2,23 +2,6 @@
 
 /*
 |--------------------------------------------------------------------------
-| Bundle Routing
-|--------------------------------------------------------------------------
-|
-| Want to setup convention based controller routing for a bundle? It is
-| simple as pie to get started. The Route::bundle method will set up a
-| great route to get you started. 
-|
-| The first and second segments will specify the controller and method,
-| and the rest will be passed to the method as parameters. A route is
-| also generated to point the root URI to the home@index method.
-|
-*/
-
-Route::bundle();
-
-/*
-|--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
 |
@@ -50,10 +33,10 @@ Route::bundle();
 |
 */
 
-Route::to('* /', function()
-{
-	return View::make('home.index');
-});
+Route::to('* /(:any?)/(:any?)/(:any?)', array(
+	'uses'     => '(:1)@(:2)',
+	'defaults' => array('home', 'index', null),
+));
 
 Route::to('* /(:all)', function()
 {

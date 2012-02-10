@@ -29,6 +29,13 @@ class Router {
 	public static $names = array();
 
 	/**
+	 * The actions that have been reverse routed.
+	 *
+	 * @var array
+	 */
+	public static $uses = array();
+
+	/**
 	 * The wildcard patterns supported by the router.
 	 *
 	 * @var array
@@ -58,28 +65,6 @@ class Router {
 	public static $methods = array('GET', 'POST', 'PUT', 'DELETE');
 
 	/**
-	 * Register an array of routes with the router.
-	 *
-	 * <code>
-	 *		// Register an array of routes
-	 *		Router::group(array('GET /' => function() {}));
-	 *
-	 *		// Register a batch route that handles multiple URIs
-	 *		Router:group(array('GET /, GET /home' => function() {}));
-	 * </code>
-	 *
-	 * @param  array  $routes
-	 * @return void
-	 */
-	public static function group($routes)
-	{
-		foreach ($routes as $route => $action)
-		{
-			static::register($route, $action);
-		}
-	}
-
-	/**
 	 * Register a HTTPS route with the router.
 	 *
 	 * @param  string|array  $route
@@ -105,7 +90,7 @@ class Router {
 		if ($bundle !== DEFAULT_BUNDLE)
 		{
 			$root = rtrim(Bundle::option($bundle, 'handles'), '/');
-		}
+		} 
 
 		// Once we have the root URI of the given bundle, which may be an empty string
 		// in the case of the default bundle. We will first register a route to the
@@ -114,13 +99,15 @@ class Router {
 
 		// This route sets up the default controller routing convention for Laravel.
 		// The first required segment is the controller name, the second segment
-		// is an optional method name, and the remaining segments are passed to
-		// the action as parameters - a good base route.
+		// is an optional method name; the rest are parameters.
 		$pattern = trim("/{$root}/(:any)/(:any?)/(:any?)/(:any?)", '/');
 
+		// By registering this route with a default first parameter of "index",
+		// this should allow calls to any controller and will use familiar
+		// CodeIgniter style conventions for routing the request.
 		static::register("* /{$pattern}", array(
 			
-			'uses'     => "{$bundle}::(:1)@(:2)",
+			'uses' => "{$bundle}::(:1)@(:2)",
 
 			'defaults' => array('index', null, null),
 		
@@ -270,6 +257,14 @@ class Router {
 	 */
 	public static function uses($action, $method = 'GET')
 	{
+		// If the action has already been reverse routed before, we'll just
+		// grab the previously found route to save time. They are cached
+		// in a static array on the class.
+		if (isset(static::$uses[$method.$action]))
+		{
+			return static::$uses[$method.$action];
+		}
+
 		Bundle::routes(Bundle::name($action));
 
 		foreach (static::routes() as $uri => $route)
@@ -281,7 +276,7 @@ class Router {
 			{
 				if (starts_with($uri, $method))
 				{
-					return array($uri => $route);
+					return static::$uses[$method.$action] = array($uri => $route);
 				}
 			}
 		}
@@ -368,6 +363,15 @@ class Router {
 		if ($count > 0)
 		{
 			$key .= str_repeat(')?', $count);
+
+			// If the key is missing the first forward slash, we will 
+			// add it back on as the first optional segment removed
+			// it from the string.
+			if ( ! str_contains($key, ' /'))
+			{
+				$key = str_replace(' ', ' /', $key);
+				die($key);
+			}
 		}
 
 		return strtr($key, static::$patterns);

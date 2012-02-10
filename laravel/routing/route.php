@@ -60,7 +60,7 @@ class Route {
 		// root of the application, a single forward slash is returned.
 		$uris = array_get($action, 'handles', array($key));
 
-		$this->uris = array_map(array($this, 'extract'), $uris);
+		$this->uris = array_map(array($this, 'destination'), $uris);
 
 		// Determine the bundle in which the route was registered. We will know
 		// the bundle by using the bundle::handles method, which will return
@@ -68,21 +68,14 @@ class Route {
 		$this->bundle = Bundle::handles($this->uris[0]);
 
 		$this->parameters($key, $action, $parameters);
-	}
 
-	/**
-	 * Retrieve the URI from a given route destination.
-	 *
-	 * If the request is to the application root, a slash is returned.
-	 *
-	 * @param  string  $segment
-	 * @return string
-	 */
-	protected static function extract($segment)
-	{
-		$uri = substr($segment, strpos($segment, ' ') + 1);
-
-		return ($uri !== '/') ? trim($uri, '/') : $uri;
+		// Once we have set the parameters and URIs, we'll transpose the route
+		// parameters onto the URIs so that the routes response naturally to
+		// the handles without the wildcards messing them up.
+		foreach ($this->uris as &$uri)
+		{
+			$uri = $this->transpose($uri, $this->parameters);
+		}
 	}
 
 	/**
@@ -120,6 +113,32 @@ class Route {
 		}
 
 		$this->parameters = $parameters;
+	}
+
+	/**
+	 * Substitute the parameters in a given URI.
+	 *
+	 * @param  string  $uri
+	 * @param  array   $parameters
+	 * @return string
+	 */
+	public static function transpose($uri, $parameters)
+	{
+		// Spin through each route parameter and replace the route wildcard segment
+		// with the corresponding parameter passed to the method. Afterwards, we'll
+		// replace all of the remaining optional URI segments.
+		foreach ((array) $parameters as $parameter)
+		{
+			if ( ! is_null($parameter))
+			{
+				$uri = preg_replace('/\(.+?\)/', $parameter, $uri, 1);
+			}
+		}
+
+		// If there are any remaining optional place-holders, we'll just replace
+		// them with empty strings since not every optional parameter has to be
+		// in the array of parameters that were passed.
+		return str_replace(array_keys(Router::$optional), '', $uri);		
 	}
 
 	/**
@@ -305,25 +324,6 @@ class Route {
 	}
 
 	/**
-	 * Register an array of routes with the router.
-	 *
-	 * <code>
-	 *		// Register an array of routes
-	 *		Route::group(array('GET /' => function() {}));
-	 *
-	 *		// Register a batch route that handles multiple URIs
-	 *		Route:group(array('GET /, GET /home' => function() {}));
-	 * </code>
-	 *
-	 * @param  array  $routes
-	 * @return void
-	 */
-	public static function group($routes)
-	{
-		Router::group($routes);
-	}
-
-	/**
 	 * Register conventional controller handling for a bundle.
 	 *
 	 * @param  string  $bundle
@@ -347,7 +347,7 @@ class Route {
 	 */
 	public static function destination($destination)
 	{
-		return substr($destination, strpos($destination, '/'));
+		return trim(substr($destination, strpos($destination, '/')), '/') ?: '/';
 	}
 
 }
