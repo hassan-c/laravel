@@ -88,11 +88,21 @@ class Router {
 		{
 			list($bundle, $controller) = Bundle::parse($controller);
 
-			$base = str_replace('.', '/', $controller);
+			// First we'll replace any dots with slashes, as this will cover the routing
+			// of any nested controllers. Dots provide a nice, clean syntax instead of
+			// using the directory slashes in the controller name.
+			$path = str_replace('.', '/', $controller);
 
+			// We also need to grab the root URI for the bundle. The "handles" option
+			// on the bundle specifies which URIs the bundle can respond to, and we
+			// need to prefix the route with that value.
 			$root = trim(Bundle::option($bundle, 'handles'), '/');
 
-			static::register(static::basic($root, $base), array(
+			// Once we have the path and root URI, we can generate a basic route for
+			// the controller that should handle typical, CodeIgniter style routing
+			// where the first parameter is the controller, second is the method,
+			// and remaining segments are passed as method arguments.
+			static::register(static::basic($root, $path), array(
 				
 				'uses'     => "{$bundle}::{$controller}@(:1)",
 				
@@ -106,14 +116,14 @@ class Router {
 	 * Get the route pattern for a basic, conventional controller route.
 	 *
 	 * @param  string  $root
-	 * @param  string  $base
+	 * @param  string  $path
 	 * @return string
 	 */
-	protected static function basic($root, $base)
+	protected static function basic($root, $path)
 	{
 		$wildcards = implode('/', array_fill(0, 4, '(:any?)'));
 
-		return "* /{$root}{$base}/{$wildcards}";
+		return "* /{$root}{$path}/{$wildcards}";
 	}
 
 	/**
