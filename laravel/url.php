@@ -198,7 +198,7 @@ class URL {
 		// We'll replace both dots and @ signs in the URI since both are used
 		// to specify the controller and action, and by convention should be
 		// translated into URI slashes.
-		$uri = $root.str_replace(array('.', '@'), '/', $action);
+		$uri = $root.'/'.str_replace(array('.', '@'), '/', $action);
 
 		return str_finish($uri, '/').implode('/', $parameters);
 	}

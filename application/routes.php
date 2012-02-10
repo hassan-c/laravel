@@ -32,6 +32,12 @@
 |		});
 |
 */
+/*
+Route::to('GET /', function()
+{
+	return View::make('home.index');
+});
+*/
 
 Route::to('GET /', function()
 {

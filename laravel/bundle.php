@@ -110,14 +110,6 @@ class Bundle {
 	{
 		$defaults = array('handles' => null, 'auto' => false);
 
-		// If a handles clause has been specified, we will cap it with a trailing
-		// slash so the bundle is not extra greedy with its routes. Otherwise a
-		// bundle that handles "s" would handle all routes beginning with "s".
-		if (isset($config['handles']))
-		{
-			$config['handles'] = str_finish($config['handles'], '/');
-		}
-
 		static::$bundles[$config['name']] = array_merge($defaults, $config);
 	}
 
@@ -200,7 +192,7 @@ class Bundle {
 
 		foreach (static::$bundles as $key => $value)
 		{
-			if (starts_with($uri, $value['handles'])) return $key;
+			if (starts_with($uri, $value['handles'].'/')) return $key;
 		}
 
 		return DEFAULT_BUNDLE;

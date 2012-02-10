@@ -192,8 +192,6 @@ class Router {
 			{
 				$routes[$uri]['https'] = $https;
 			}
-
-			$routes[$uri]['handles'] = (array) $route;
 		}
 	}
 
@@ -232,9 +230,9 @@ class Router {
 	 */
 	public static function controller($controllers, $secure = false)
 	{
-		foreach ((array) $controllers as $controller)
+		foreach ((array) $controllers as $identifier)
 		{
-			list($bundle, $controller) = Bundle::parse($controller);
+			list($bundle, $controller) = Bundle::parse($identifier);
 
 			// First we need to replace the dots with slashes in thte controller name
 			// so that it is in directory format. The dots allow the developer to use
@@ -249,19 +247,39 @@ class Router {
 				$root = Bundle::option($bundle, 'handles');
 			}
 
+			// If the route is being handled by a bundle, we'll need to add a slash
+			// to the end of the root to put a slash in between the root and the
+			// controller path in the route pattern.
+			if (isset($root))
+			{
+				$root = $root.'/';
+			}
+
+			// If the controller is a "home" controller, we'll need to also build a
+			// index method route for the controller. We'll remove "home" from the
+			// route root and setup a route to point to the index method.
+			if (ends_with($path, 'home'))
+			{
+				$home = trim(substr($path, 0, -4), '/');
+
+				$uses = "{$identifier}@index";
+
+				static::register('* /'.trim($root.$home, '/'), $uses);
+			}
+
 			// The number of method arguments allowed for a controller is set by the
 			// "segments" constant on this class, which allows for the developers to
 			// increase or decrease the limit on method arguments.
 			$wildcards = static::repeat('(:any?)', static::$segments);
 
-			$pattern = "* /{$root}{$path}/{$wildcards}";
-
 			// Once we have the path and root URI we can generate a basic route for
 			// the controller that should handle a typical, conventional controller
 			// routing setup of controller/method/segment/segment, etc.
+			$pattern = "* /{$root}{$path}/{$wildcards}";
+
 			static::register($pattern, array(
 				
-				'uses'     => "{$bundle}::{$controller}@(:1)",
+				'uses'     => "{$identifier}@(:1)",
 
 				'defaults' => array_pad(array('index'), static::$segments, null),
 

@@ -46,7 +46,7 @@ abstract class Controller {
 	 *		// Call the "show" method on the "user" controller
 	 *		$response = Controller::call('user@show');
 	 *
-	 *		// Call the "profile" method on the "user/admin" controller and pass parameters
+	 *		// Call the "user/admin" controller and pass parameters
 	 *		$response = Controller::call('user.admin@profile', array($username));
 	 * </code>
 	 *

@@ -15,13 +15,6 @@ class Route {
 	public $key;
 
 	/**
-	 * The URI the route responds to.
-	 *
-	 * @var string
-	 */
-	public $uris;
-
-	/**
 	 * The bundle in which the route was registered.
 	 *
 	 * @var string
@@ -55,21 +48,14 @@ class Route {
 		$this->key = $key;
 		$this->action = $action;
 
-		// Extract each URI from the route key. Since the route key has the request
-		// method, we will extract that from the string. If the URI points to the
-		// root of the application, a single forward slash is returned.
-		$uris = array_get($action, 'handles', array($key));
-
-		foreach ($uris as $uri)
-		{
-			$this->uris[] = static::destination($uri);
-		}
-
 		// Determine the bundle in which the route was registered. We will know
 		// the bundle by using the bundle::handles method, which will return
 		// the bundle assigned to that URI.
-		$this->bundle = Bundle::handles($this->uris[0]);
+		$this->bundle = Bundle::handles(static::destination($key));
 
+		// We need to set the parameters passed on the number parameters and
+		// optional parameters compared to the parameters actually defined
+		// within the route string.
 		$this->parameters($key, $action, $parameters);
 	}
 
@@ -89,7 +75,7 @@ class Route {
 
 		// We need to determine how many of the default paramters should be merged
 		// into the parameter array. First, we'll count the number of wildcards
-		// in the route URI to figure out how many defaults need merging.
+		// in the route URI and then merge the defaults.
 		foreach (array_keys(Router::patterns()) as $wildcard)
 		{
 			$wildcards += substr_count($key, $wildcard);
@@ -277,6 +263,29 @@ class Route {
 	public static function controller($controller)
 	{
 		Router::controller($controller);
+	}
+
+	/**
+	 * Register an array of routes with the router.
+	 *
+	 * @param  array  $routes
+	 * @return void
+	 */
+	public static function batch($routes)
+	{
+		Router::batch($routes);
+	}
+
+	/**
+	 * Register a group of routes with the same attributes.
+	 *
+	 * @param  array  $attributes
+	 * @param  array  $routes
+	 * @return void
+	 */
+	public static function group($attributes, $routes)
+	{
+		Router::group($attributes, $routes);
 	}
 
 	/**
