@@ -86,7 +86,7 @@ class Route {
 
 		// We need to determine how many of the default paramters should be merged
 		// into the parameter array. First, we'll count the number of wildcards
-		// in the route URI to figure out how many defaults we need.
+		// in the route URI to figure out how many defaults need merging.
 		foreach (array_keys(Router::patterns()) as $wildcard)
 		{
 			$wildcards += substr_count($key, $wildcard);
