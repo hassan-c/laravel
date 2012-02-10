@@ -160,9 +160,9 @@ if (count(URI::$segments) > 15)
  * static property. If no route is found, the 404 response will
  * be returned to the browser.
  */
-$route = Routing\Router::route(Request::method(), $uri);
+Request::$route = Routing\Router::route(Request::method(), $uri);
 
-$response = $route->call();
+$response = Request::$route->call();
 
 /**
  * Close the session and write the active payload to persistent

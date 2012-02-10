@@ -267,7 +267,7 @@ class Router {
 		{
 			$action = static::$routes[$destination];
 
-			return Request::add(new Route($destination, $action));
+			return new Route($destination, $action);
 		}
 
 		// If we can't find a literal match we'll iterate through all of the
@@ -275,7 +275,7 @@ class Router {
 		// regular expressions and wildcards.
 		if ( ! is_null($route = static::match($destination)))
 		{
-			return Request::add($route);
+			return $route;
 		}
 	}
 

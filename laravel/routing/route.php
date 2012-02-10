@@ -281,16 +281,6 @@ class Route {
 	}
 
 	/**
-	 * Determine if this route instance is a sub-request route.
-	 *
-	 * @return bool
-	 */
-	public function internal()
-	{
-		return Request::route() !== $this;
-	}
-
-	/**
 	 * Register a route with the router.
 	 *
 	 * <code>
