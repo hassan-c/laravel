@@ -40,7 +40,7 @@ class Router {
 	 *
 	 * @var int
 	 */
-	public static $segments = 6;
+	public static $segments = 7;
 
 	/**
 	 * The wildcard patterns supported by the router.
@@ -81,55 +81,6 @@ class Router {
 	public static function secure($route, $action)
 	{
 		static::register($route, $action, true);
-	}
-
-	/**
-	 * Register a controller with the router.
-	 *
-	 * @param  string|array  $controller
-	 * @return void
-	 */
-	public static function controller($controllers)
-	{
-		foreach ((array) $controllers as $controller)
-		{
-			list($bundle, $controller) = Bundle::parse($controller);
-
-			// First we need to replace the dots with slashes in thte controller name
-			// so that it is in directory format. The dots allow the developer to use
-			// a clean syntax when specifying the controller.
-			$path = str_replace('.', '/', $controller);
-
-			// We also need to grab the root URI for the bundle. The "handles" option
-			// on the bundle specifies which URIs the bundle responds to, and we need
-			// to prefix the route with that value.
-			if ($bundle !== DEFAULT_BUNDLE)
-			{
-				$root = Bundle::option($bundle, 'handles');
-			}
-
-			// The number of method arguments allowed for a controller is set by the
-			// "segments" constant on this class, which allows for the developers to
-			// increase or decrease the limit on total number of method arguments
-			// that can be passed to a routable controller action.
-			$segments = static::$segments + 1;
-
-			$wildcards = implode('/', array_fill(0, $segments, '(:any?)'));
-
-			$pattern = "* /{$root}{$path}/{$wildcards}";
-
-			// Once we have the path and root URI we can generate a basic route for
-			// the controller that should handle a typical, conventional controller
-			// routing setup of controller/method/segment/segment that is used in
-			// other popular MVC frameworks like CodeIgniter.
-			static::register($pattern, array(
-				
-				'uses'     => "{$bundle}::{$controller}@(:1)",
-
-				'defaults' => array_pad(array('index'), $segments, null),
-			
-			));
-		}
 	}
 
 	/**
@@ -206,6 +157,52 @@ class Router {
 			}
 
 			$routes[$uri]['handles'] = (array) $route;
+		}
+	}
+
+	/**
+	 * Register a controller with the router.
+	 *
+	 * @param  string|array  $controller
+	 * @return void
+	 */
+	public static function controller($controllers)
+	{
+		foreach ((array) $controllers as $controller)
+		{
+			list($bundle, $controller) = Bundle::parse($controller);
+
+			// First we need to replace the dots with slashes in thte controller name
+			// so that it is in directory format. The dots allow the developer to use
+			// a clean syntax when specifying the controller.
+			$path = str_replace('.', '/', $controller);
+
+			// We also need to grab the root URI for the bundle. The "handles" option
+			// on the bundle specifies which URIs the bundle responds to, and we need
+			// to prefix the route with that value.
+			if ($bundle !== DEFAULT_BUNDLE)
+			{
+				$root = Bundle::option($bundle, 'handles');
+			}
+
+			// The number of method arguments allowed for a controller is set by the
+			// "segments" constant on this class, which allows for the developers to
+			// increase or decrease the limit on total number of method arguments
+			// that can be passed to a routable controller action.
+			$wildcards = static::repeat('(:any?)', static::$segments);
+
+			$pattern = "* /{$root}{$path}/{$wildcards}";
+
+			// Once we have the path and root URI we can generate a basic route for
+			// the controller that should handle a typical, conventional controller
+			// routing setup of controller/method/segment/segment, etc.
+			static::register($pattern, array(
+				
+				'uses'     => "{$bundle}::{$controller}@(:1)",
+
+				'defaults' => array_pad(array('index'), static::$segments, null),
+			
+			));
 		}
 	}
 
@@ -407,6 +404,18 @@ class Router {
 	public static function patterns()
 	{
 		return array_merge(static::$patterns, static::$optional);
+	}
+
+	/**
+	 * Get a string repeating a URI pattern any number of times.
+	 *
+	 * @param  string  $pattern
+	 * @param  int     $times
+	 * @return string
+	 */
+	protected static function repeat($pattern, $times)
+	{
+		return implode('/', array_fill(0, $times, $pattern));
 	}
 
 }

@@ -253,8 +253,8 @@ class URL {
 		$uri = Route::destination(key($route));
 
 		// To determine whether the URL should be HTTPS or not, we look for the "https"
-		// value on the route action array. The route has control over whether the
-		// URL should be generated with an HTTPS protocol.
+		// value on the route action array. The route has control over whether the URL
+		// should be generated with an HTTPS protocol string or jsut HTTP.
 		$https = array_get(current($route), 'https', false);
 
 		return static::to(static::transpose($uri, $parameters), $https);
