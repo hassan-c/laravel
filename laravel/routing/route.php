@@ -82,7 +82,7 @@ class Route {
 	{
 		$wildcards = 0;
 
-		$defaults = array_get($action, 'defaults', array());
+		$defaults = (array) array_get($action, 'defaults');
 
 		// We need to determine how many of the default paramters should be merged
 		// into the parameter array. First, we'll count the number of wildcards
@@ -188,8 +188,6 @@ class Route {
 
 	/**
 	 * Get the filters that are attached to the route for a given event.
-	 *
-	 * If the route belongs to a bundle, the bundle's global filters are returned too.
 	 *
 	 * @param  string  $event
 	 * @return array

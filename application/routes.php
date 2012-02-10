@@ -38,19 +38,11 @@ Route::to('GET /', function()
 	return View::make('home.index');
 });
 
-Route::to('* /(:any)/(:any?)/(:any?)', array(
-	'uses'     => '(:1)@(:2)',
-	'defaults' => array('index', null),
-));
+Router::controller('home');
 
 Route::to('* /(:all)', function()
 {
 	return Event::first('404');
-});
-
-Event::listen('404', function()
-{
-	return Response::error('404');
 });
 
 /*

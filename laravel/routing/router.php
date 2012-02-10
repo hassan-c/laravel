@@ -77,6 +77,46 @@ class Router {
 	}
 
 	/**
+	 * Register a controller with the router.
+	 *
+	 * @param  string  $controller
+	 * @return void
+	 */
+	public static function controller($controllers)
+	{
+		foreach ((array) $controllers as $controller)
+		{
+			list($bundle, $controller) = Bundle::parse($controller);
+
+			$base = str_replace('.', '/', $controller);
+
+			$root = trim(Bundle::option($bundle, 'handles'), '/');
+
+			static::register(static::basic($root, $base), array(
+				
+				'uses'     => "{$bundle}::{$controller}@(:1)",
+				
+				'defaults' => array('index', null, null, null),
+			
+			));
+		}
+	}
+
+	/**
+	 * Get the route pattern for a basic, conventional controller route.
+	 *
+	 * @param  string  $root
+	 * @param  string  $base
+	 * @return string
+	 */
+	protected static function basic($root, $base)
+	{
+		$wildcards = implode('/', array_fill(0, 4, '(:any?)'));
+
+		return "* /{$root}{$base}/{$wildcards}";
+	}
+
+	/**
 	 * Register a route with the router.
 	 *
 	 * <code>
