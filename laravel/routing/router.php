@@ -101,7 +101,7 @@ class Router {
 			// Once we have the path and root URI, we can generate a basic route for
 			// the controller that should handle typical, CodeIgniter style routing
 			// where the first parameter is the controller, second is the method,
-			// and remaining segments are passed as method arguments.
+			// and the remaining are passed as arguments.
 			static::register(static::basic($root, $path), array(
 				
 				'uses'     => "{$bundle}::{$controller}@(:1)",
