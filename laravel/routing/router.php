@@ -96,17 +96,6 @@ class Router {
 	}
 
 	/**
-	 * Register a secure controller with the router.
-	 *
-	 * @param  string|array  $controller
-	 * @return void
-	 */
-	public static function secure_controller($controllers)
-	{
-		return static::controller($controllers, true);
-	}
-
-	/**
 	 * Register a route with the router.
 	 *
 	 * <code>
