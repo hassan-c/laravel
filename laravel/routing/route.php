@@ -245,7 +245,7 @@ class Route {
 	 */
 	public static function controller($controllers, $defaults = 'index')
 	{
-		Router::controller($controllers);
+		Router::controller($controllers, $defaults);
 	}
 
 	/**
@@ -257,7 +257,7 @@ class Route {
 	 */
 	public static function secure_controller($controllers, $defaults = 'index')
 	{
-		Router::secure_controller($controllers, $defaults);
+		Router::controller($controllers, $defaults, true);
 	}
 
 	/**
