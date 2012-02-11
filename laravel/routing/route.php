@@ -289,6 +289,18 @@ class Route {
 	}
 
 	/**
+	 * Register a group of routes that share attributes.
+	 *
+	 * @param  array    $attributes
+	 * @param  Closure  $callback
+	 * @return void
+	 */
+	public static function group($attributes, Closure $callback)
+	{
+		Router::group($attributes, $callback);
+	}
+
+	/**
 	 * Register a HTTPS route with the router.
 	 *
 	 * @param  string        $method
