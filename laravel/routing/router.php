@@ -173,7 +173,7 @@ class Router {
 			// HTTPS value in as a parameter short-cut.
 			if ( ! isset($routes[$method][$uri]['https']))
 			{
-				$routes[$method][$uri]['https'] = $https;
+				$routes[$method][$uri]['https'] = false;
 			}
 		}
 	}

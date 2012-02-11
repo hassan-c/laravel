@@ -31,19 +31,35 @@ require path('sys').'autoloader'.EXT;
 spl_autoload_register(array('Laravel\\Autoloader', 'load'));
 
 /**
+ * Register the Laravel namespace so that the auto-loader loads it
+ * according to the PSR-0 naming conventions. This should provide
+ * fast resolution of all core classes.
+ */
+Autoloader::namespaces(array('Laravel' => path('sys')));
+
+/**
+ * Set the CLI options on the $_SERVER global array so we can easily
+ * retrieve them from the various parts of the CLI code. We can use
+ * the Request class to access them conveniently.
+ */
+if (defined('STDIN'))
+{
+	$console = CLI\Command::options($_SERVER['argv']);
+
+	list($arguments, $options) = $console;
+
+	$options = array_change_key_case($options, CASE_UPPER);
+
+	$_SERVER['CLI'] = $options;
+}
+
+/**
  * Register all of the core class aliases. These aliases provide a
  * convenient way of working with the Laravel core classes without
  * having to worry about the namespacing. The developer is also
  * free to remove aliases when they extend core classes.
  */
 Autoloader::$aliases = Config::get('application.aliases');
-
-/**
- * Register the Laravel namespace so that the auto-loader loads it
- * according to the PSR-0 naming conventions. This should provide
- * fast resolution of all core classes.
- */
-Autoloader::namespaces(array('Laravel' => path('sys')));
 
 /**
  * Register the default timezone for the application. This will

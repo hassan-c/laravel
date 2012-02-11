@@ -11,15 +11,6 @@ use Laravel\Config;
 Bundle::start(DEFAULT_BUNDLE);
 
 /**
- * Set the CLI options on the $_SERVER global array so we can easily
- * retrieve them from the various parts of the CLI code. We can use
- * the Request class to access them conveniently.
- */
-list($arguments, $_SERVER['CLI']) = Command::options($_SERVER['argv']);
-
-$_SERVER['CLI'] = array_change_key_case($_SERVER['CLI'], CASE_UPPER);
-
-/**
  * The Laravel environment may be specified on the CLI using the "env"
  * option, allowing the developer to easily use local configuration
  * files from the CLI since the environment is usually controlled
