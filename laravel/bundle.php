@@ -39,13 +39,13 @@ class Bundle {
 	 * @param  array   $config
 	 * @return void
 	 */
-	public static function register($bundle, $config)
+	public static function register($bundle, $config = array())
 	{
 		$defaults = array('handles' => null, 'auto' => false);
 
-		// If the given configuration is actually a string, we will assume it is
-		// a locationi and set the bundle name to match it. This is common for
-		// most bundles who simply live in the root bundle directory.
+		// If the given configuration is actually a string, we will assume it is a
+		// location and set the bundle name to match it. This is common for most
+		// bundles who simply live in the root bundle directory.
 		if (is_string($config))
 		{
 			$bundle = $config;
@@ -53,9 +53,9 @@ class Bundle {
 			$config = array('location' => $bundle);
 		}
 
-		// IF no location is set, we will set the location to match the name
-		// of the bundle. This is for bundles who are installed to the root
-		// of the bundle directory so a location was not set.
+		// IF no location is set, we will set the location to match the name of
+		// the bundle. This is for bundles who are installed to the root of
+		// the bundle directory so a location was not set.
 		if ( ! isset($config['location']))
 		{
 			$config['location'] = $bundle;
