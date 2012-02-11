@@ -88,4 +88,7 @@ date_default_timezone_set($timezone);
  */
 $bundles = require path('app').'bundles'.EXT;
 
-Bundle::register($bundles);
+foreach ($bundles as $bundle => $config)
+{
+	Bundle::register($bundle, $config);
+}

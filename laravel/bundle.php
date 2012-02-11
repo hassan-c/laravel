@@ -35,36 +35,33 @@ class Bundle {
 	/**
 	 * Register the bundle for the application.
 	 *
-	 * @param  array  $bundles
+	 * @param  string  $bundle
+	 * @param  array   $config
 	 * @return void
 	 */
-	public static function register($bundles)
+	public static function register($bundle, $config)
 	{
 		$defaults = array('handles' => null, 'auto' => false);
 
-		foreach ($bundles as $bundle => $config)
+		// If the given configuration is actually a string, we will assume it is
+		// a locationi and set the bundle name to match it. This is common for
+		// most bundles who simply live in the root bundle directory.
+		if (is_string($config))
 		{
-			// If the given configuration is actually a string, we will assume it is
-			// a locationi and set the bundle name to match it. This is common for
-			// most bundles who simply live in the root bundle directory and do
-			// not handle any application routes.
-			if (is_string($config))
-			{
-				$bundle = $config;
+			$bundle = $config;
 
-				$config = array('location' => $bundle);
-			}
-
-			// IF no location is set, we will set the location to match the name
-			// of the bundle. This is for bundles who are installed to the root
-			// of the bundle directory so a location was not set.
-			if ( ! isset($config['location']))
-			{
-				$config['location'] = $bundle;
-			}
-
-			static::$bundles[$bundle] = array_merge($defaults, $config);
+			$config = array('location' => $bundle);
 		}
+
+		// IF no location is set, we will set the location to match the name
+		// of the bundle. This is for bundles who are installed to the root
+		// of the bundle directory so a location was not set.
+		if ( ! isset($config['location']))
+		{
+			$config['location'] = $bundle;
+		}
+
+		static::$bundles[$bundle] = array_merge($defaults, $config);
 	}
 
 	/**
