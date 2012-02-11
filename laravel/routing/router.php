@@ -345,9 +345,9 @@ class Router {
 		// To find a named route, we will iterate through every route defined
 		// for the application. We will cache the routes by name so we can
 		// load them very quickly the next time.
-		foreach (static::routes() as $key => $value)
+		foreach (static::all() as $key => $value)
 		{
-			if (array_get($value, 'name') == $name)
+			if (array_get($value, 'name') === $name)
 			{
 				return static::$names[$name] = array($key => $value);
 			}
@@ -468,6 +468,26 @@ class Router {
 	}
 
 	/**
+	 * Get all of the routes across all request methods.
+	 *
+	 * @return array
+	 */
+	public static function all()
+	{
+		$all = array();
+
+		// To get all the routes, we'll just loop through each request
+		// method supported by the router and merge in each of the
+		// arrays into the main array of routes.
+		foreach (static::$methods as $method)
+		{
+			$all = array_merge($all, static::routes($method));
+		}
+
+		return $all;
+	}
+
+	/**
 	 * Get all of the registered routes, with fallbacks at the end.
 	 *
 	 * @param  string  $method
@@ -475,9 +495,9 @@ class Router {
 	 */
 	public static function routes($method = null)
 	{
-		$routes = array_get(static::$routes, $method);
+		$routes = array_get(static::$routes, $method, array());
 
-		return array_merge($routes, array_get(static::$fallback, $method));
+		return array_merge($routes, array_get(static::$fallback, $method, array()));
 	}
 
 	/**
