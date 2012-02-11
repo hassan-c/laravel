@@ -54,6 +54,17 @@ if (defined('STDIN'))
 }
 
 /**
+ * The Laravel environment may be specified on the CLI using the env
+ * option, allowing the developer to easily use local configuration
+ * files from the CLI since the environment is usually controlled
+ * by server environmenet variables.
+ */
+if (isset($_SERVER['CLI']['ENV']))
+{
+	$_SERVER['LARAVEL_ENV'] = $_SERVER['CLI']['ENV'];
+}
+
+/**
  * Register all of the core class aliases. These aliases provide a
  * convenient way of working with the Laravel core classes without
  * having to worry about the namespacing. The developer is also

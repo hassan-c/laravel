@@ -11,17 +11,6 @@ use Laravel\Config;
 Bundle::start(DEFAULT_BUNDLE);
 
 /**
- * The Laravel environment may be specified on the CLI using the "env"
- * option, allowing the developer to easily use local configuration
- * files from the CLI since the environment is usually controlled
- * by server environmenet variables.
- */
-if (isset($_SERVER['CLI']['ENV']))
-{
-	$_SERVER['LARAVEL_ENV'] = $_SERVER['CLI']['ENV'];
-}
-
-/**
  * The default database connection may be set by specifying a value
  * for the "database" CLI option. This allows migrations to be run
  * conveniently for a test or staging database.
