@@ -237,6 +237,30 @@ class Route {
 	}
 
 	/**
+	 * Register a controller with the router.
+	 *
+	 * @param  string|array  $controller
+	 * @param  string|array  $defaults
+	 * @return void
+	 */
+	public static function controller($controllers, $defaults = 'index')
+	{
+		Router::controller($controllers);
+	}
+
+	/**
+	 * Register a secure controller with the router.
+	 *
+	 * @param  string|array  $controllers
+	 * @param  string|array  $defaults
+	 * @return void
+	 */
+	public static function secure_controller($controllers, $defaults = 'index')
+	{
+		Router::secure_controller($controllers, $defaults);
+	}
+
+	/**
 	 * Register a GET route with the router.
 	 *
 	 * @param  string|array  $route
@@ -319,17 +343,6 @@ class Route {
 	public static function secure($method, $route, $action)
 	{
 		Router::secure($method, $route, $action);
-	}
-
-	/**
-	 * Register a controller with the router.
-	 *
-	 * @param  string|array  $controller
-	 * @return void
-	 */
-	public static function controller($controller)
-	{
-		Router::controller($controller);
 	}
 
 }
