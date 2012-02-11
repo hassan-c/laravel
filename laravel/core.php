@@ -80,3 +80,12 @@ Autoloader::$aliases = Config::get('application.aliases');
 $timezone = Config::get('application.timezone');
 
 date_default_timezone_set($timezone);
+
+/**
+ * Finally we'll grab all of the bundles and register them
+ * with the bundle class. All of the bundles are stored in
+ * an array within the application directory.
+ */
+$bundles = require path('app').'bundles'.EXT;
+
+Bundle::register($bundles);
