@@ -229,9 +229,22 @@ class Router {
 	}
 
 	/**
+	 * Register a secure controller with the router.
+	 *
+	 * @param  string|array  $controllers
+	 * @param  string|array  $defaults
+	 * @return void
+	 */
+	public static function secure_controller($controllers, $defaults = 'index')
+	{
+		static::controller($controllers, $defaults, true);
+	}
+
+	/**
 	 * Register a controller with the router.
 	 *
 	 * @param  string|array  $controller
+	 * @param  string|array  $defaults
 	 * @param  bool          $https
 	 * @return void
 	 */
@@ -262,9 +275,9 @@ class Router {
 			// increase or decrease the limit on method arguments.
 			$wildcards = static::repeat('(:any?)', static::$segments);
 
-			// Once we have the path and root URI we can generate a basic route for
-			// the controller that should handle a typical conventional controller
-			// routing setup of controller/method/segment/segment, etc.
+			// Once we have the path and root URI we can build a simple route for
+			// the controller that should handle a conventional controller route
+			// setup of controller/method/segment/segment, etc.
 			$pattern = trim("{$root}/{$controller}/{$wildcards}", '/');
 
 			// Finally we can build the "uses" clause and the attributes for the
