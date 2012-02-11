@@ -202,8 +202,6 @@ class Route {
 	/**
 	 * Get the anonymous function assigned to handle the route.
 	 *
-	 * If no anonymous function is assigned, null will be returned by the method.
-	 *
 	 * @return Closure
 	 */
 	protected function handler()
@@ -227,7 +225,7 @@ class Route {
 	 */
 	public function is($name)
 	{
-		return is_array($this->action) and array_get($this->action, 'name') === $name;
+		return array_get($this->action, 'name') === $name;
 	}
 
 	/**
