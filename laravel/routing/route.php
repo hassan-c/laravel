@@ -62,9 +62,9 @@ class Route {
 		// the bundle assigned to that URI.
 		$this->bundle = Bundle::handles($uri);
 
-		// We'll need to set the parameters passed on the number parameters and
-		// optional parameters compared to the parameters actually defined in
-		// the URI string for the route.
+		// We'll set the parameters based on the number of parameters passed
+		// compared to the parameters that were needed. If more parameters
+		// are needed, we'll merge in defaults.
 		$this->parameters($uri, $action, $parameters);
 	}
 

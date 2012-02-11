@@ -170,6 +170,11 @@ class Bundle {
 	{
 		$path = static::path($bundle).'routes'.EXT;
 
+		// By setting the bundle property on the router the router knows what
+		// value to replace the (:bundle) place-holder with when the bundle
+		// routes are added, keeping the routes flexible.
+		Routing\Router::$bundle = static::option($bundle, 'handles');
+
 		if ( ! static::routed($bundle) and file_exists($path))
 		{
 			require $path;

@@ -36,6 +36,13 @@ class Router {
 	public static $fallback = array();
 
 	/**
+	 * The "handes" clause for the bundle currently being routed.
+	 *
+	 * @var string
+	 */
+	public static $bundle;
+
+	/**
 	 * The number of URI segments allowed as method arguments.
 	 *
 	 * @var int
@@ -133,6 +140,8 @@ class Router {
 
 				continue;
 			}
+
+			$uri = str_replace('(:bundle)', static::$bundle, $uri);
 
 			// If the URI begins with a wildcard, we want to add this route to the
 			// array of "fallback" routes. Fallback routes are always processed

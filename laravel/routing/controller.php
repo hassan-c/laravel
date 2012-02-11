@@ -340,7 +340,7 @@ abstract class Controller {
 	 * Dynamically resolve items from the application IoC container.
 	 *
 	 * <code>
-	 *		// Retrieve an object registered in the container as "mailer"
+	 *		// Retrieve an object registered in the container
 	 *		$mailer = $this->mailer;
 	 *
 	 *		// Equivalent call using the IoC container instance
@@ -349,9 +349,10 @@ abstract class Controller {
 	 */
 	public function __get($key)
 	{
-		if (IoC::registered($key)) return IoC::resolve($key);
-
-		throw new \Exception("Accessing undefined property [$key] on controller.");
+		if (IoC::registered($key))
+		{
+			return IoC::resolve($key);
+		}
 	}
 
 }
