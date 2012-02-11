@@ -46,28 +46,6 @@ Autoloader::$aliases = Config::get('application.aliases');
 Autoloader::namespaces(array('Laravel' => path('sys')));
 
 /**
- * Grab the bundle manifest for the application. This contains an
- * array of all of the installed bundles, plus information about
- * each of them. If it's not cached, we'll detect them and then
- * cache it to save time later.
- */
-$bundles = Cache::remember(Bundle::manifest, function()
-{
-	return Bundle::detect(path('bundle'));
-
-}, Config::get('application.bundle.cache'));
-
-/**
- * Register all of the bundles that are defined in the main bundle
- * manifest. This informs the framework where the bundle lives
- * and which URIs it can respnod to.
- */
-foreach ($bundles as $bundle)
-{
-	Bundle::register($bundle);
-}
-
-/**
  * Register the default timezone for the application. This will
  * be the default timezone used by all date functions through
  * throughout the entire application.

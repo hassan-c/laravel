@@ -2,6 +2,25 @@
 
 /*
 |--------------------------------------------------------------------------
+| Auto-Loader Mappings
+|--------------------------------------------------------------------------
+|
+| Laravel uses a simple array of class to path mappings to drive the class
+| auto-loader. This simple approach helps avoid the performance problems
+| of searching through directories by convention.
+|
+| Registering a mapping couldn't be easier. Just pass an array of class
+| to path maps into the "map" function of Autoloader. Then, when you
+| want to use that class, just use it. It's simple!
+|
+*/
+
+Autoloader::map(array(
+	'Base_Controller' => path('app').'controllers/base.php',
+));
+
+/*
+|--------------------------------------------------------------------------
 | Auto-Loader PSR-0 Directories
 |--------------------------------------------------------------------------
 |
@@ -22,44 +41,35 @@ Autoloader::psr(array(
 
 /*
 |--------------------------------------------------------------------------
-| Auto-Loader Mappings
+| Bundle Configuration
 |--------------------------------------------------------------------------
 |
-| Laravel uses a simple array of class to path mappings to drive the class
-| auto-loader. This simple approach helps avoid the performance problems
-| of searching through directories by convention.
+| Bundles allow you to conveniently extend and organize your application.
+| Think of bundles as self-contained applications. They can have routes,
+| controllers, models, views, configuration, etc. You can even create
+| your own bundles to share with the Laravel community.
 |
-| Registering a mapping couldn't be easier. Just pass an array of class
-| to path maps into the "map" function of Autoloader. Then, when you
-| want to use that class, just use it. It's simple!
+| This is a list of the bundles installed for your application and tells
+| Laravel the location of the bundle's root directory, as well as the
+| root URI the bundle responds to.
+|
+| For example, if you have an "admin" bundle located in "bundles/admin" 
+| that you want to handle requests with URIs that begin with "admin",
+| simply add it to the array like this:
+|
+|		'admin' => array(
+|			'location' => 'admin',
+|			'handles'  => 'admin',
+|		),
+|
+| Note that the "location" is relative to the "bundles" directory.
+| Now the bundle will be recognized by Laravel and will be able
+| to respond to requests beginning with "admin"!
+|
+| Have a bundle that lives in the root of the bundle directory
+| and doesn't respond to any requests? Just add the bundle
+| name to the array and we'll take care of the rest.
 |
 */
 
-Autoloader::map(array(
-	'Base_Controller' => path('app').'controllers/base.php',
-));
-
-/*
-|--------------------------------------------------------------------------
-| Application 404 & 500 Error Handlers
-|--------------------------------------------------------------------------
-|
-| To centralize and simplify 404 handling, Laravel uses an awesome event
-| system to retrieve the response. Feel free to modify this function to
-| your tastes and the needs of your application.
-|
-| Similarly, we use an event to handle the display of 500 level errors
-| within the application. These errors are fired when there is an
-| uncaught exception thrown in the application.
-|
-*/
-
-Event::listen('404', function()
-{
-	return Response::error('404');
-});
-
-Event::listen('500', function()
-{
-	return Response::error('500');
-});
+Bundle::register(array());
