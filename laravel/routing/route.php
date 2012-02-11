@@ -279,6 +279,18 @@ class Route {
 	}
 
 	/**
+	 * Register a route that handles any request method.
+	 *
+	 * @param  string|array  $route
+	 * @param  mixed         $action
+	 * @return void
+	 */
+	public static function any($route, $action)
+	{
+		Router::register('*', $route, $action);
+	}
+
+	/**
 	 * Register a HTTPS route with the router.
 	 *
 	 * @param  string        $method

@@ -8,6 +8,20 @@ use Laravel\Request;
 class Router {
 
 	/**
+	 * The route names that have been matched.
+	 *
+	 * @var array
+	 */
+	public static $names = array();
+
+	/**
+	 * The actions that have been reverse routed.
+	 *
+	 * @var array
+	 */
+	public static $uses = array();
+
+	/**
 	 * All of the routes that have been registered.
 	 *
 	 * @var array
@@ -20,20 +34,6 @@ class Router {
 	 * @var array
 	 */
 	public static $fallback = array();
-
-	/**
-	 * All of the route names that have been matched with URIs.
-	 *
-	 * @var array
-	 */
-	public static $names = array();
-
-	/**
-	 * The actions that have been reverse routed.
-	 *
-	 * @var array
-	 */
-	public static $uses = array();
 
 	/**
 	 * The number of URI segments allowed as method arguments.
@@ -186,7 +186,7 @@ class Router {
 		}
 		// If the action is a Closure, we will manually put it in an array
 		// to work around a bug in PHP 5.3.2 which causes Closures cast
-		// as arrays to become null. We'll remove this someday.
+		// as arrays to become null. We'll remove this.
 		elseif ($action instanceof Closure)
 		{
 			$action = array($action);
@@ -199,10 +199,10 @@ class Router {
 	 * Register a controller with the router.
 	 *
 	 * @param  string|array  $controller
-	 * @param  bool          $secure
+	 * @param  bool          $https
 	 * @return void
 	 */
-	public static function controller($controllers, $secure = false)
+	public static function controller($controllers, $https = false)
 	{
 		foreach ((array) $controllers as $identifier)
 		{
@@ -210,23 +210,18 @@ class Router {
 
 			// First we need to replace the dots with slashes in thte controller name
 			// so that it is in directory format. The dots allow the developer to use
-			// a clean syntax when specifying the controller.
-			$path = str_replace('.', '/', $controller);
+			// a cleaner syntax when specifying the controller. We will also grab the
+			// root URI for the controller's bundle.
+			$controller = str_replace('.', '/', $controller);
 
-			// We also need to grab the root URI for the bundle. The "handles" option
-			// on the bundle specifies which URIs the bundle responds to, and we need
-			// to prefix the route with that value.
-			if ($bundle !== DEFAULT_BUNDLE)
-			{
-				$root = Bundle::option($bundle, 'handles');
-			}
+			$root = Bundle::option($bundle, 'handles');
 
 			// If the controller is a "home" controller, we'll need to also build a
 			// index method route for the controller. We'll remove "home" from the
 			// route root and setup a route to point to the index method.
-			if (ends_with($path, 'home'))
+			if (ends_with($controller, 'home'))
 			{
-				$home = trim(substr($path, 0, -4), '/');
+				$home = trim(substr($controller, 0, -4), '/');
 
 				$uses = "{$identifier}@index";
 
@@ -243,7 +238,7 @@ class Router {
 			// Once we have the path and root URI we can generate a basic route for
 			// the controller that should handle a typical, conventional controller
 			// routing setup of controller/method/segment/segment, etc.
-			$pattern = trim("{$root}/{$path}/{$wildcards}", '/');
+			$pattern = trim("{$root}/{$controller}/{$wildcards}", '/');
 
 			static::register('*', $pattern, array(
 				
@@ -251,7 +246,7 @@ class Router {
 
 				'defaults' => array_pad(array('index'), static::$segments, null),
 
-				'https'    => $secure,
+				'https'    => $https,
 			));
 		}
 	}
@@ -329,9 +324,6 @@ class Router {
 	 */
 	public static function route($method, $uri)
 	{
-		// First we will make sure the bundle that handles the given URI has been
-		// started for the current request. Bundles may handle any URI beginning
-		// with their "handles" string.
 		Bundle::start($bundle = Bundle::handles($uri));
 
 		// Of course literal route matches are the quickest to find, so we will
