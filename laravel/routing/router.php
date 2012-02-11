@@ -235,7 +235,7 @@ class Router {
 	 * @param  bool          $https
 	 * @return void
 	 */
-	public static function controller($controllers, $https = false)
+	public static function controller($controllers, $defaults = 'index', $https = false)
 	{
 		foreach ((array) $controllers as $identifier)
 		{
@@ -254,34 +254,58 @@ class Router {
 			// route root and setup a route to point to the index method.
 			if (ends_with($controller, 'home'))
 			{
-				$home = trim(substr($controller, 0, -4), '/');
-
-				$uses = "{$identifier}@index";
-
-				$pattern = trim($root.'/'.$home, '/') ?: '/';
-
-				static::register('*', $pattern, $uses);
+				static::root($identifier, $controller, $root);
 			}
 
-			// The number of method arguments allowed for a controller is set by the
-			// "segments" constant on this class, which allows for the developers to
+			// The number of method arguments allowed for a controller is set by a
+			// "segments" constant on this class which allows for the developer to
 			// increase or decrease the limit on method arguments.
 			$wildcards = static::repeat('(:any?)', static::$segments);
 
 			// Once we have the path and root URI we can generate a basic route for
-			// the controller that should handle a typical, conventional controller
+			// the controller that should handle a typical conventional controller
 			// routing setup of controller/method/segment/segment, etc.
 			$pattern = trim("{$root}/{$controller}/{$wildcards}", '/');
 
-			static::register('*', $pattern, array(
-				
-				'uses'     => "{$identifier}@(:1)",
+			// Finally we can build the "uses" clause and the attributes for the
+			// controller route and register it with the router with a wildcard
+			// method so it is available on every request method.
+			$uses = "{$identifier}@(:1)";
 
-				'defaults' => array_pad(array('index'), static::$segments, null),
+			$attributes = compact('uses', 'defaults', 'https');
 
-				'https'    => $https,
-			));
+			static::register('*', $pattern, $attributes);
 		}
+	}
+
+	/**
+	 * Register a route for the root of a controller.
+	 *
+	 * @param  string  $identifier
+	 * @param  string  $controller
+	 * @param  string  $root
+	 * @return void
+	 */
+	protected static function root($identifier, $controller, $root)
+	{
+		// First we need to strip "home" off of the controller name to create the
+		// URI needed to match the controller's folder, which should match the
+		// root URI we want to point to the index method.
+		if ($controller !== 'home')
+		{
+			$home = dirname($controller);
+		}
+		else
+		{
+			$home = '';
+		}
+
+		// After we trim the "home" off of the controller name we'll build the
+		// pattern needed to map to the controller and then register a route
+		// to point the pattern to the controller's index method.
+		$pattern = trim($root.'/'.$home, '/') ?: '/';
+
+		static::register('*', $pattern, "{$identifier}@index");
 	}
 
 	/**

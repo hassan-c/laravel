@@ -94,12 +94,20 @@ class Route {
 
 		// If there are less parameters than wildcards, we will figure out how
 		// many parameters we need to inject from the array of defaults and
-		// merge them in into the main parameter array for the route.
+		// merge them in into the main array for the route.
 		if ($needed > 0)
 		{
 			$defaults = array_slice($defaults, count($defaults) - $needed);
 
 			$parameters = array_merge($parameters, $defaults);
+		}
+
+		// If the final number of parameters doesn't match the count of the
+		// wildcards, we'll pad parameter array with null to cover any of
+		// the default values that were forgotten.
+		if (count($parameters) !== $wildcards)
+		{
+			$parameters = array_pad($parameters, $wildcards, null);
 		}
 
 		$this->parameters = $parameters;
