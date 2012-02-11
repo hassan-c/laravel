@@ -36,6 +36,11 @@ class Router {
 	public static $fallback = array();
 
 	/**
+	 * The current attributes being shared by routes.
+	 */
+	public static $group;
+
+	/**
 	 * The "handes" clause for the bundle currently being routed.
 	 *
 	 * @var string
@@ -93,6 +98,28 @@ class Router {
 		$action['https'] = true;
 
 		static::register($method, $route, $action);
+	}
+
+	/**
+	 * Register a group of routes that share attributes.
+	 *
+	 * @param  array    $attributes
+	 * @param  Closure  $callback
+	 * @return void
+	 */
+	public static function group($attributes, Closure $callback)
+	{
+		// Route groups allow the developer to specify attributes for a group
+		// of routes. To register them, we'll set a static property on the
+		// router so that the register method will see them.
+		static::$group = $attributes;
+
+		call_user_func($callback);
+
+		// Once the routes have been registered, we want to set the group to
+		// null so the attributes will not be assigned to any of the routes
+		// that are added after the group is declared.
+		static::$group = null;
 	}
 
 	/**
@@ -157,8 +184,16 @@ class Router {
 				$routes[$method][$uri] = static::action($action);
 			}
 			
-			// If the HTTPS option is not set on the action, we will use the
-			// value given to the method. The "secure" method passes in the
+			// If a group is being registered, we'll merge all of the group
+			// options into the action, giving preference to the action
+			// for options that are specified in both.
+			if ( ! is_null(static::$group))
+			{
+				$routes[$method][$uri] += static::$group;
+			}
+
+			// If the HTTPS option is not set on the action, we'll use the
+			// value given to the method. The secure method passes in the
 			// HTTPS value in as a parameter short-cut.
 			if ( ! isset($routes[$method][$uri]['https']))
 			{
